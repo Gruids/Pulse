@@ -2,11 +2,14 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Мессенджер</title>
+  <title>Pulse Messenger</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #0e1621; color: #fff; height: 100vh; display: flex; }
-    #sidebar { width: 300px; background: #17212b; display: flex; flex-direction: column; }
+    #sidebar { width: 300px; background: #17212b; display: none; flex-direction: column; }
     #sidebar-header { padding: 15px; background: #242f3d; display: flex; align-items: center; gap: 10px; }
     .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2b5278; display: flex; align-items: center; justify-content: center; }
     #search { padding: 10px; background: #17212b; }
@@ -15,7 +18,7 @@
     .chat-item { padding: 12px 15px; cursor: pointer; display: flex; gap: 10px; }
     .chat-item:hover { background: #242f3d; }
     .chat-item.active { background: #2b5278; }
-    #main { flex: 1; display: flex; flex-direction: column; }
+    #main { flex: 1; display: none; flex-direction: column; }
     #chat-header { padding: 15px; background: #242f3d; display: flex; align-items: center; gap: 10px; }
     #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
     .msg { max-width: 60%; padding: 8px 12px; border-radius: 8px; background: #182633; }
@@ -31,7 +34,7 @@
     .auth-form input { width: 100%; padding: 10px; margin: 10px 0; border: none; border-radius: 5px; background: #242f3d; color: #fff; }
     .auth-form button { width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 5px; background: #2b5278; color: #fff; cursor: pointer; }
     .tab { display: flex; margin-bottom: 15px; }
-    .tab button { flex: 1; background: #242f3d; }
+    .tab button { flex: 1; background: #242f3d; color: #fff; border: none; padding: 8px; cursor: pointer; }
     .tab button.active { background: #2b5278; }
   </style>
 </head>
@@ -39,8 +42,8 @@
   <div id="auth">
     <div class="auth-form">
       <div class="tab">
-        <button class="active" onclick="showTab('login')">Вход</button>
-        <button onclick="showTab('reg')">Регистрация</button>
+        <button class="active" onclick="showTab('login', this)">Вход</button>
+        <button onclick="showTab('reg', this)">Регистрация</button>
       </div>
       <div id="login-tab">
         <input id="login-user" placeholder="Email">
@@ -67,7 +70,7 @@
   <div id="main">
     <div id="chat-header">
       <div class="avatar"></div>
-      <span id="chat-title">Выберите чат</span>
+      <span id="chat-title">Общий чат</span>
     </div>
     <div id="messages"></div>
     <div id="input-area">
@@ -76,9 +79,6 @@
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCyKQ5hrVFikcnL2Z_dnlHYt6G0ZgqZZoQ",
@@ -93,20 +93,21 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+
+    const authDiv = document.getElementById('auth');
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main');
-    const authDiv = document.getElementById('auth');
     const userName = document.getElementById('user-name');
     const userAvatar = document.getElementById('user-avatar');
     const messages = document.getElementById('messages');
     const chatList = document.getElementById('chat-list');
     let currentUser = null;
 
-    function showTab(tab) {
+    function showTab(tab, btn) {
       document.getElementById('login-tab').style.display = tab === 'login' ? 'block' : 'none';
       document.getElementById('reg-tab').style.display = tab === 'reg' ? 'block' : 'none';
       document.querySelectorAll('.tab button').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
+      btn.classList.add('active');
     }
 
     function register() {
@@ -115,20 +116,20 @@
       auth.createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
           const user = userCredential.user;
-          alert('Registered! UID: ' + user.uid);
+          alert('Регистрация успешна! UID: ' + user.uid);
           db.ref('users/' + user.uid).set({
             email: user.email,
             createdAt: new Date().toISOString()
           });
         })
-        .catch(e => alert('Error: ' + e.message));
+        .catch(e => alert('Ошибка: ' + e.message));
     }
 
     function login() {
       const email = document.getElementById('login-user').value;
       const pass = document.getElementById('login-pass').value;
       auth.signInWithEmailAndPassword(email, pass)
-        .catch(e => alert(e.message));
+        .catch(e => alert('Ошибка: ' + e.message));
     }
 
     auth.onAuthStateChanged(user => {
@@ -145,7 +146,7 @@
 
     function sendMsg() {
       const text = document.getElementById('msg-input').value;
-      if (!text) return;
+      if (!text || !currentUser) return;
       db.ref('messages/general').push({
         user: currentUser.email,
         text: text,
