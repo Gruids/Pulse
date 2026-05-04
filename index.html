@@ -43,13 +43,13 @@
         <button onclick="showTab('reg')">Регистрация</button>
       </div>
       <div id="login-tab">
-        <input id="login-user" placeholder="Логин">
+        <input id="login-user" placeholder="Email">
         <input id="login-pass" type="password" placeholder="Пароль">
         <button onclick="login()">Войти</button>
       </div>
       <div id="reg-tab" style="display:none">
-        <input id="reg-user" placeholder="Логин">
-        <input id="reg-pass" type="password" placeholder="Пароль">
+        <input id="reg-user" placeholder="Email (test@mail.com)">
+        <input id="reg-pass" type="password" placeholder="Пароль (мин 6 символов)">
         <button onclick="register()">Зарегистрироваться</button>
       </div>
     </div>
@@ -109,8 +109,15 @@
       const email = document.getElementById('reg-user').value;
       const pass = document.getElementById('reg-pass').value;
       auth.createUserWithEmailAndPassword(email, pass)
-        .then(() => alert('Registered!'))
-        .catch(e => alert(e.message));
+        .then((userCredential) => {
+          const user = userCredential.user;
+          alert('Registered! UID: ' + user.uid);
+          db.ref('users/' + user.uid).set({
+            email: user.email,
+            createdAt: new Date().toISOString()
+          });
+        })
+        .catch(e => alert('Error: ' + e.message));
     }
 
     function login() {
