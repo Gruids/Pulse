@@ -62,6 +62,7 @@
     <div id="sidebar-header">
       <div class="avatar" id="user-avatar"></div>
       <span id="user-name"></span>
+      <button onclick="logout()" style="margin-left:auto; background:#242f3d; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Выход</button>
     </div>
     <div id="tabs">
       <button class="tab-btn active" onclick="switchTab('chats', this)">Чаты</button>
@@ -252,6 +253,15 @@
       const items = document.querySelectorAll('#chat-list .list-item, #user-list .list-item');
       items.forEach(el => {
         el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? 'flex' : 'none';
+      });
+    }
+
+    function logout() {
+      auth.signOut().then(() => {
+        currentUser = null;
+        sidebar.style.display = 'none';
+        main.style.display = 'none';
+        authDiv.style.display = 'flex';
       });
     }
   </script>
