@@ -7,35 +7,35 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0e1621; color: #fff; height: 100vh; display: flex; }
-    #sidebar { width: 300px; background: #17212b; display: none; flex-direction: column; }
-    #sidebar-header { padding: 15px; background: #242f3d; display: flex; align-items: center; gap: 10px; }
-    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2b5278; display: flex; align-items: center; justify-content: center; }
-    #search { padding: 10px; background: #17212b; }
-    #search input { width: 100%; padding: 8px; border: none; border-radius: 5px; background: #242f3d; color: #fff; }
-    #chat-list { flex: 1; overflow-y: auto; }
-    .chat-item { padding: 12px 15px; cursor: pointer; display: flex; gap: 10px; }
-    .chat-item:hover { background: #242f3d; }
-    .chat-item.active { background: #2b5278; }
-    #main { flex: 1; display: none; flex-direction: column; }
-    #chat-header { padding: 15px; background: #242f3d; display: flex; align-items: center; gap: 10px; }
-    #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-    .msg { max-width: 60%; padding: 8px 12px; border-radius: 8px; background: #182633; }
-    .msg.self { background: #2b5278; align-self: flex-end; }
-    .msg .author { font-size: 12px; color: #5eb5f7; margin-bottom: 4px; }
-    .msg .time { font-size: 11px; color: #aaa; float: right; margin-left: 10px; }
-    #input-area { padding: 10px; background: #17212b; display: flex; gap: 10px; }
-    #input-area input { flex: 1; padding: 10px; border: none; border-radius: 5px; background: #242f3d; color: #fff; }
-    #input-area button { padding: 10px 20px; border: none; border-radius: 5px; background: #2b5278; color: #fff; cursor: pointer; }
-    #auth { position: fixed; inset: 0; background: #0e1621; display: flex; justify-content: center; align-items: center; }
-    .auth-form { background: #17212b; padding: 30px; border-radius: 10px; width: 320px; }
-    .auth-form h2 { margin-bottom: 20px; text-align: center; }
-    .auth-form input { width: 100%; padding: 10px; margin: 10px 0; border: none; border-radius: 5px; background: #242f3d; color: #fff; }
-    .auth-form button { width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 5px; background: #2b5278; color: #fff; cursor: pointer; }
-    .tab { display: flex; margin-bottom: 15px; }
-    .tab button { flex: 1; background: #242f3d; color: #fff; border: none; padding: 8px; cursor: pointer; }
-    .tab button.active { background: #2b5278; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI',sans-serif; background:#0e1621; color:#fff; height:100vh; display:flex; }
+    #sidebar { width:300px; background:#17212b; display:none; flex-direction:column; }
+    #sidebar-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
+    .avatar { width:40px; height:40px; border-radius:50%; background:#2b5278; display:flex; align-items:center; justify-content:center; }
+    #tabs { display:flex; border-bottom:1px solid #242f3d; }
+    .tab-btn { flex:1; padding:10px; background:#17212b; border:none; color:#fff; cursor:pointer; }
+    .tab-btn.active { background:#2b5278; }
+    #search { padding:10px; }
+    #search input { width:100%; padding:8px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
+    #chat-list, #user-list { flex:1; overflow-y:auto; }
+    .list-item { padding:12px 15px; cursor:pointer; display:flex; gap:10px; align-items:center; }
+    .list-item:hover { background:#242f3d; }
+    .list-item.active { background:#2b5278; }
+    #main { flex:1; display:none; flex-direction:column; }
+    #chat-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
+    #messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+    .msg { max-width:60%; padding:8px 12px; border-radius:8px; background:#182633; }
+    .msg.self { background:#2b5278; align-self:flex-end; }
+    .msg .author { font-size:12px; color:#5eb5f7; margin-bottom:4px; }
+    .msg .time { font-size:11px; color:#aaa; float:right; margin-left:10px; }
+    #input-area { padding:10px; background:#17212b; display:flex; gap:10px; }
+    #input-area input { flex:1; padding:10px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
+    #input-area button { padding:10px 20px; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
+    #auth { position:fixed; inset:0; background:#0e1621; display:flex; justify-content:center; align-items:center; }
+    .auth-form { background:#17212b; padding:30px; border-radius:10px; width:320px; }
+    .auth-form h2 { margin-bottom:20px; text-align:center; }
+    .auth-form input { width:100%; padding:10px; margin:10px 0; border:none; border-radius:5px; background:#242f3d; color:#fff; }
+    .auth-form button { width:100%; padding:10px; margin:5px 0; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -63,8 +63,18 @@
       <div class="avatar" id="user-avatar"></div>
       <span id="user-name"></span>
     </div>
-    <div id="search"><input placeholder="Поиск" oninput="filterChats(this.value)"></div>
-    <div id="chat-list"></div>
+    <div id="tabs">
+      <button class="tab-btn active" onclick="switchTab('chats', this)">Чаты</button>
+      <button class="tab-btn" onclick="switchTab('users', this)">Люди</button>
+    </div>
+    <div id="search"><input placeholder="Поиск..." oninput="filterItems(this.value)"></div>
+    <div id="chat-list">
+      <div class="list-item active" onclick="openGeneralChat()">
+        <div class="avatar">O</div>
+        <div>Общий чат</div>
+      </div>
+    </div>
+    <div id="user-list" style="display:none"></div>
   </div>
 
   <div id="main">
@@ -101,12 +111,74 @@
     const userAvatar = document.getElementById('user-avatar');
     const messages = document.getElementById('messages');
     const chatList = document.getElementById('chat-list');
+    const userList = document.getElementById('user-list');
+    const chatTitle = document.getElementById('chat-title');
     let currentUser = null;
+    let currentChatId = 'general';
+    let currentChatType = 'general';
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (tab === 'chats') {
+        chatList.style.display = 'block';
+        userList.style.display = 'none';
+      } else {
+        chatList.style.display = 'none';
+        userList.style.display = 'block';
+        loadUsers();
+      }
+    }
+
+    function loadUsers() {
+      userList.innerHTML = 'Загрузка...';
+      db.ref('users').once('value')
+        .then(snapshot => {
+          userList.innerHTML = '';
+          if (!snapshot.exists()) {
+            userList.innerHTML = '<div class="list-item">Нет пользователей</div>';
+            return;
+          }
+          snapshot.forEach(child => {
+            const user = child.val();
+            if (user.email === currentUser.email) return;
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `<div class="avatar">${user.email[0].toUpperCase()}</div><div>${user.email}</div>`;
+            div.onclick = () => openPrivateChat(child.key, user.email);
+            userList.appendChild(div);
+          });
+        })
+        .catch(e => {
+          userList.innerHTML = 'Ошибка: ' + e.message;
+          console.error('Load users error:', e);
+        });
+    }
+
+    function openPrivateChat(uid, email) {
+      const ids = [currentUser.uid, uid].sort();
+      const chatId = ids.join('_');
+      currentChatId = chatId;
+      currentChatType = 'private';
+      chatTitle.textContent = email;
+      messages.innerHTML = '';
+      loadMessages();
+      document.querySelectorAll('#user-list .list-item').forEach(el => el.classList.remove('active'));
+      event.target.closest('.list-item').classList.add('active');
+    }
+
+    function openGeneralChat() {
+      currentChatId = 'general';
+      currentChatType = 'general';
+      chatTitle.textContent = 'Общий чат';
+      messages.innerHTML = '';
+      loadMessages();
+    }
 
     function showTab(tab, btn) {
       document.getElementById('login-tab').style.display = tab === 'login' ? 'block' : 'none';
       document.getElementById('reg-tab').style.display = tab === 'reg' ? 'block' : 'none';
-      document.querySelectorAll('.tab button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.auth-form .tab button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     }
 
@@ -116,8 +188,7 @@
       auth.createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
           const user = userCredential.user;
-          alert('Регистрация успешна! UID: ' + user.uid);
-          db.ref('users/' + user.uid).set({
+          return db.ref('users/' + user.uid).set({
             email: user.email,
             createdAt: new Date().toISOString()
           });
@@ -147,8 +218,9 @@
     function sendMsg() {
       const text = document.getElementById('msg-input').value;
       if (!text || !currentUser) return;
-      db.ref('messages/general').push({
+      db.ref('messages/' + currentChatId).push({
         user: currentUser.email,
+        userId: currentUser.uid,
         text: text,
         time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
       });
@@ -156,18 +228,21 @@
     }
 
     function loadMessages() {
-      db.ref('messages/general').on('child_added', snapshot => {
+      db.ref('messages/' + currentChatId).off();
+      messages.innerHTML = '';
+      db.ref('messages/' + currentChatId).on('child_added', snapshot => {
         const msg = snapshot.val();
         const div = document.createElement('div');
         div.className = 'msg' + (msg.user === currentUser.email ? ' self' : '');
         div.innerHTML = `<div class="author">${msg.user}</div>${msg.text}<span class="time">${msg.time}</span>`;
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
-      });
+      }, e => console.error('Load messages error:', e));
     }
 
-    function filterChats(q) {
-      document.querySelectorAll('.chat-item').forEach(el => {
+    function filterItems(q) {
+      const items = document.querySelectorAll('#chat-list .list-item, #user-list .list-item');
+      items.forEach(el => {
         el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? 'flex' : 'none';
       });
     }
