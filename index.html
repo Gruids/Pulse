@@ -189,12 +189,16 @@
       auth.createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
           const user = userCredential.user;
-          return db.ref('users/' + user.uid).set({
+          db.ref('users/' + user.uid).set({
             email: user.email,
             uid: user.uid,
             createdAt: new Date().toISOString()
-          }).then(() => {
-            alert('Регистрация успешна! UID: ' + user.uid);
+          }, (error) => {
+            if (error) {
+              alert('Ошибка записи в базу: ' + error.message);
+            } else {
+              alert('Регистрация успешна! UID: ' + user.uid);
+            }
           });
         })
         .catch(e => alert('Ошибка регистрации: ' + e.message));
