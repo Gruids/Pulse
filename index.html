@@ -76,11 +76,27 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <script>
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    const firebaseConfig = {
+      apiKey: "AIzaSyCyKQ5hrVFikcnL2Z_dnlHYt6G0ZgqZZoQ",
+      authDomain: "pulse-f91f7.firebaseapp.com",
+      projectId: "pulse-f91f7",
+      storageBucket: "pulse-f91f7.firebasestorage.app",
+      messagingSenderId: "385531673294",
+      appId: "1:385531673294:web:11ca96153d2b07ccb2ae9f",
+      measurementId: "G-X61NV7817J"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const sidebar = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    const authDiv = document.getElementById('auth');
     let currentUser = null;
-    let chats = JSON.parse(localStorage.getItem('chats') || '{"general":{"name":"Общий чат","msgs":[]}}');
-    let currentChat = 'general';
 
     function showTab(tab) {
       document.getElementById('login-tab').style.display = tab === 'login' ? 'block' : 'none';
@@ -90,66 +106,52 @@
     }
 
     function register() {
-      const u = document.getElementById('reg-user').value, p = document.getElementById('reg-pass').value;
-      if (users[u]) return alert('Логин занят');
-      users[u] = { pass: p, chats: ['general'] };
-      localStorage.setItem('users', JSON.stringify(users));
-      loginUser(u);
+      const email = document.getElementById('reg-user').value;
+      const pass = document.getElementById('reg-pass').value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(() => alert('Registered!'))
+        .catch(e => alert(e.message));
     }
 
     function login() {
-      const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
-      if (users[u]?.pass === p) loginUser(u);
-      else alert('Неверные данные');
+      const email = document.getElementById('login-user').value;
+      const pass = document.getElementById('login-pass').value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .catch(e => alert(e.message));
     }
 
-    function loginUser(u) {
-      currentUser = u;
-      auth.style.display = 'none';
-      userName.textContent = u;
-      userAvatar.textContent = u[0].toUpperCase();
-      renderChats();
-      openChat('general');
-    }
-
-    function renderChats() {
-      chatList.innerHTML = '';
-      Object.entries(chats).forEach(([id, chat]) => {
-        const div = document.createElement('div');
-        div.className = 'chat-item' + (id === currentChat ? ' active' : '');
-        div.innerHTML = `<div class="avatar">${chat.name[0]}</div><div>${chat.name}</div>`;
-        div.onclick = () => openChat(id);
-        chatList.appendChild(div);
-      });
-    }
-
-    function openChat(id) {
-      currentChat = id;
-      chatTitle.textContent = chats[id].name;
-      renderMsgs();
-      renderChats();
-    }
-
-    function renderMsgs() {
-      messages.innerHTML = '';
-      (chats[currentChat].msgs || []).forEach(m => {
-        const div = document.createElement('div');
-        div.className = 'msg' + (m.user === currentUser ? ' self' : '');
-        div.innerHTML = `<div class="author">${m.user}</div>${m.text}<span class="time">${m.time}</span>`;
-        messages.appendChild(div);
-      });
-      messages.scrollTop = messages.scrollHeight;
-    }
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        authDiv.style.display = 'none';
+        sidebar.style.display = 'flex';
+        main.style.display = 'flex';
+        userName.textContent = user.email;
+        userAvatar.textContent = user.email[0].toUpperCase();
+        loadMessages();
+      }
+    });
 
     function sendMsg() {
-      const text = msgInput.value;
+      const text = document.getElementById('msg-input').value;
       if (!text) return;
-      const msg = { user: currentUser, text, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
-      chats[currentChat].msgs = chats[currentChat].msgs || [];
-      chats[currentChat].msgs.push(msg);
-      localStorage.setItem('chats', JSON.stringify(chats));
-      renderMsgs();
-      msgInput.value = '';
+      db.ref('messages/general').push({
+        user: currentUser.email,
+        text: text,
+        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+      });
+      document.getElementById('msg-input').value = '';
+    }
+
+    function loadMessages() {
+      db.ref('messages/general').on('child_added', snapshot => {
+        const msg = snapshot.val();
+        const div = document.createElement('div');
+        div.className = 'msg' + (msg.user === currentUser.email ? ' self' : '');
+        div.innerHTML = `<div class="author">${msg.user}</div>${msg.text}<span class="time">${msg.time}</span>`;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      });
     }
 
     function filterChats(q) {
