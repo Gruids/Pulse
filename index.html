@@ -28,6 +28,7 @@
     .msg.self { background:#2b5278; align-self:flex-end; }
     .msg .author { font-size:12px; color:#5eb5f7; margin-bottom:4px; }
     .msg .time { font-size:11px; color:#aaa; float:right; margin-left:10px; }
+    .msg.unverified { border: 1px solid #e74c3c; }
     #input-area { padding:10px; background:#17212b; display:flex; gap:10px; }
     #input-area input { flex:1; padding:10px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
     #input-area button { padding:10px 20px; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
@@ -42,34 +43,50 @@
     .field-group { margin:6px 0; }
     .field-group label { font-size:13px; color:#8899a6; display:block; margin-bottom:3px; }
     .hint { font-size:12px; color:#5eb5f7; margin:4px 0 6px; }
+    .warning-banner { background:#e74c3c; color:#fff; padding:8px 15px; font-size:13px; text-align:center; display:none; }
+    .warning-banner.active { display:block; }
 
-    /* Modal overlay */
-    #modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:1000; }
+    /* Modal */
+    #modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1000; }
     #modal-overlay.active { display:flex; }
-    .modal { background:#17212b; padding:30px; border-radius:12px; width:360px; text-align:center; }
-    .modal h3 { margin-bottom:10px; font-size:18px; }
-    .modal p { color:#8899a6; font-size:13px; margin-bottom:15px; }
-    .modal input { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:15px; }
-    .modal button { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:15px; font-weight:bold; }
-    .modal .error { color:#e74c3c; font-size:13px; margin-top:5px; min-height:18px; }
+    .modal { background:#17212b; padding:25px; border-radius:12px; width:380px; max-width:90vw; }
+    .modal h3 { margin-bottom:10px; font-size:17px; text-align:center; }
+    .modal p { color:#8899a6; font-size:13px; margin-bottom:12px; line-height:1.5; text-align:center; }
+    .modal input { width:100%; padding:11px; margin:6px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:14px; }
+    .modal button { width:100%; padding:11px; margin:6px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:14px; font-weight:bold; }
+    .modal .error { color:#e74c3c; font-size:12px; margin-top:4px; min-height:16px; }
+    .modal .secondary-btn { background:#242f3d; font-weight:normal; font-size:13px; }
 
-    /* Settings panel */
-    #settings-panel { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:1000; }
+    /* Settings */
+    #settings-panel { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1000; }
     #settings-panel.active { display:flex; }
-    .settings-box { background:#17212b; padding:30px; border-radius:12px; width:380px; max-height:80vh; overflow-y:auto; }
-    .settings-box h3 { margin-bottom:20px; font-size:18px; text-align:center; }
-    .settings-row { margin-bottom:15px; }
-    .settings-row label { font-size:13px; color:#8899a6; display:block; margin-bottom:4px; }
-    .settings-row input { width:100%; padding:10px; border:none; border-radius:6px; background:#242f3d; color:#fff; font-size:14px; }
-    .settings-row .save-btn { padding:8px 20px; border:none; border-radius:6px; background:#2b5278; color:#fff; cursor:pointer; font-size:13px; margin-top:5px; }
-    .settings-row .save-btn:hover { background:#3a6b8e; }
-    .settings-close { width:100%; padding:12px; margin-top:20px; border:none; border-radius:8px; background:#242f3d; color:#fff; cursor:pointer; font-size:14px; }
-    .settings-row .current-val { font-size:12px; color:#5eb5f7; margin-top:2px; }
-    .settings-row .error-text { color:#e74c3c; font-size:12px; margin-top:3px; }
+    .settings-box { background:#17212b; padding:25px; border-radius:12px; width:400px; max-width:90vw; max-height:85vh; overflow-y:auto; }
+    .settings-box h3 { margin-bottom:18px; font-size:17px; text-align:center; }
+    .settings-section { background:#1e2c3a; border-radius:8px; padding:15px; margin-bottom:12px; }
+    .settings-section.warning { border:1px solid #e74c3c; }
+    .settings-section h4 { font-size:14px; margin-bottom:8px; }
+    .settings-section.warning h4 { color:#e74c3c; }
+    .settings-section p { font-size:12px; color:#8899a6; margin-bottom:8px; line-height:1.4; }
+    .settings-section input { width:100%; padding:9px; border:none; border-radius:6px; background:#242f3d; color:#fff; font-size:13px; }
+    .settings-section .save-btn { padding:8px 16px; border:none; border-radius:6px; background:#2b5278; color:#fff; cursor:pointer; font-size:12px; margin-top:6px; }
+    .settings-section .error-text { color:#e74c3c; font-size:11px; margin-top:3px; }
+    .settings-section .success-text { color:#2ecc71; font-size:11px; margin-top:3px; }
+    .settings-close { width:100%; padding:11px; margin-top:5px; border:none; border-radius:8px; background:#242f3d; color:#fff; cursor:pointer; font-size:14px; }
 
-    /* Settings button in sidebar */
-    .settings-btn { background:none; border:none; color:#8899a6; cursor:pointer; font-size:18px; padding:5px; }
-    .settings-btn:hover { color:#fff; }
+    /* Phone verify modal */
+    #phone-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1001; }
+    #phone-modal-overlay.active { display:flex; }
+    .phone-modal { background:#17212b; padding:25px; border-radius:12px; width:380px; max-width:90vw; }
+    .phone-modal h3 { margin-bottom:8px; text-align:center; }
+    .phone-modal p { font-size:13px; color:#8899a6; text-align:center; margin-bottom:12px; }
+    .phone-modal input { width:100%; padding:11px; margin:5px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:14px; text-align:center; }
+    .phone-modal button { width:100%; padding:11px; margin:5px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:14px; font-weight:bold; }
+    .phone-modal .error { color:#e74c3c; font-size:12px; margin-top:3px; text-align:center; min-height:16px; }
+    .phone-modal .back-link { background:none; border:none; color:#5eb5f7; cursor:pointer; font-size:13px; display:block; margin-bottom:8px; }
+
+    /* Unverified warning toast */
+    #unverified-toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#e74c3c; color:#fff; padding:12px 20px; border-radius:8px; font-size:13px; display:none; z-index:2000; max-width:400px; text-align:center; }
+    #unverified-toast.active { display:block; }
   </style>
 </head>
 <body>
@@ -82,23 +99,23 @@
       </div>
       <div id="auth-login">
         <div class="field-group">
-          <label>Email</label>
-          <input id="login-email" type="email" placeholder="your@email.com">
+          <label>Логин</label>
+          <input id="login-username" placeholder="Ваш логин" autocomplete="username">
         </div>
         <div class="field-group">
           <label>Пароль</label>
-          <input id="login-pass" type="password" placeholder="Пароль">
+          <input id="login-pass" type="password" placeholder="Пароль" autocomplete="current-password">
         </div>
         <button onclick="doLogin()">Войти</button>
       </div>
       <div id="auth-reg" style="display:none">
         <div class="field-group">
-          <label>Email</label>
-          <input id="reg-email" type="email" placeholder="your@email.com">
+          <label>Придумайте логин</label>
+          <input id="reg-login" placeholder="Логин (3-20 символов)">
         </div>
         <div class="field-group">
-          <label>Пароль (минимум 6 символов)</label>
-          <input id="reg-pass" type="password" placeholder="Придумайте пароль">
+          <label>Придумайте пароль</label>
+          <input id="reg-pass" type="password" placeholder="Минимум 6 символов">
         </div>
         <button onclick="doRegister()">Создать аккаунт</button>
       </div>
@@ -108,12 +125,9 @@
   <div id="modal-overlay">
     <div class="modal">
       <h3>Выберите имя пользователя</h3>
-      <p>Другие люди смогут найти вас по этому имени. Вы сможете изменить его позже в настройках.</p>
-      <div class="field-group">
-        <label style="text-align:left; display:block; color:#8899a6; font-size:13px; margin-bottom:4px;">Имя пользователя</label>
-        <input id="modal-username" placeholder="username" oninput="previewUsername()">
-        <div class="hint" id="username-preview"></div>
-      </div>
+      <p>Люди смогут найти вас по этому имени. Можно изменить позже в настройках.</p>
+      <input id="modal-username" placeholder="username" oninput="previewModalUsername()">
+      <div class="hint" id="username-preview"></div>
       <div class="error" id="username-error"></div>
       <button onclick="saveUsername()">Продолжить</button>
     </div>
@@ -122,27 +136,62 @@
   <div id="settings-panel">
     <div class="settings-box">
       <h3>Настройки</h3>
-      <div class="settings-row">
-        <label>Email</label>
-        <input id="set-email" disabled>
-        <div class="current-val">Нельзя изменить</div>
+
+      <div class="settings-section warning" id="temp-account-section">
+        <h4>⚠ Временный аккаунт</h4>
+        <p>Ваш номер телефона не подтверждён. Если вы не подтвердите номер в течение 30 дней, ваш аккаунт будет удалён.</p>
+        <p style="color:#e74c3c;">Приносим свои извинения за неудобства. На данный момент у нас стоят лимиты по отправке SMS в день. Если у вас не получится зарегистрироваться сегодня — попробуйте завтра.</p>
+        <p id="temp-deadline" style="color:#5eb5f7;"></p>
+        <button class="save-btn" onclick="openPhoneVerify()" style="background:#e74c3c; width:100%;">Подтвердить номер телефона</button>
       </div>
-      <div class="settings-row">
-        <label>Имя пользователя</label>
+
+      <div class="settings-section" id="verified-section" style="display:none;">
+        <h4>✓ Номер подтверждён</h4>
+        <p id="verified-phone"></p>
+      </div>
+
+      <div class="settings-section">
+        <h4>Имя пользователя</h4>
         <input id="set-username" placeholder="username">
-        <div class="current-val" id="set-username-current"></div>
+        <div id="set-username-current" style="font-size:11px; color:#5eb5f7; margin-top:2px;"></div>
         <div class="error-text" id="set-username-error"></div>
         <button class="save-btn" onclick="changeUsername()">Изменить</button>
       </div>
-      <div class="settings-row">
-        <label>Пароль</label>
+
+      <div class="settings-section">
+        <h4>Пароль</h4>
         <input id="set-password" type="password" placeholder="Новый пароль (мин 6 символов)">
         <div class="error-text" id="set-password-error"></div>
         <button class="save-btn" onclick="changePassword()">Изменить пароль</button>
       </div>
+
       <button class="settings-close" onclick="closeSettings()">Закрыть</button>
     </div>
   </div>
+
+  <div id="phone-modal-overlay">
+    <div class="phone-modal" id="phone-step-phone">
+      <button class="back-link" onclick="closePhoneModal()">← Назад</button>
+      <h3>Подтверждение телефона</h3>
+      <p>Введите номер — мы отправим SMS с кодом</p>
+      <input id="phone-input" placeholder="+79001234567" type="tel">
+      <div class="error" id="phone-error"></div>
+      <button onclick="sendPhoneCode()">Отправить код</button>
+      <div id="recaptcha-container-phone"></div>
+    </div>
+    <div class="phone-modal" id="phone-step-code" style="display:none;">
+      <button class="back-link" onclick="backToPhoneStep()">← Назад</button>
+      <h3>Введите код из SMS</h3>
+      <p id="code-sent-label"></p>
+      <input id="phone-code-input" placeholder="000000" maxlength="6" type="tel">
+      <div class="error" id="phone-code-error"></div>
+      <button onclick="verifyPhoneCode()">Подтвердить</button>
+      <div id="resend-timer" style="text-align:center; font-size:12px; color:#8899a6; margin-top:5px;"></div>
+      <button class="secondary-btn" id="resend-phone-btn" style="display:none; background:#242f3d;" onclick="resendPhoneCode()">Отправить повторно</button>
+    </div>
+  </div>
+
+  <div id="unverified-toast"></div>
 
   <div id="sidebar">
     <div id="sidebar-header">
@@ -152,7 +201,7 @@
       <button onclick="logout()" style="margin-left:auto; background:#242f3d; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Выход</button>
     </div>
     <div id="search">
-      <input placeholder="Поиск по @username..." oninput="searchUsers(this.value)">
+      <input placeholder="Поиск по @username или телефону..." oninput="searchUsers(this.value)">
       <div id="search-results"></div>
     </div>
     <div id="chat-list">
@@ -164,6 +213,7 @@
   </div>
 
   <div id="main">
+    <div class="warning-banner" id="unverified-banner">⚠ Ваш аккаунт не подтверждён. Подтвердите номер в настройках.</div>
     <div id="chat-header">
       <div class="avatar"></div>
       <span id="chat-title">Общий чат</span>
@@ -194,6 +244,9 @@
     const authDiv = document.getElementById('auth');
     const modalOverlay = document.getElementById('modal-overlay');
     const settingsPanel = document.getElementById('settings-panel');
+    const phoneModalOverlay = document.getElementById('phone-modal-overlay');
+    const phoneStepPhone = document.getElementById('phone-step-phone');
+    const phoneStepCode = document.getElementById('phone-step-code');
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main');
     const userName = document.getElementById('user-name');
@@ -202,11 +255,18 @@
     const chatList = document.getElementById('chat-list');
     const searchResults = document.getElementById('search-results');
     const chatTitle = document.getElementById('chat-title');
+    const unverifiedBanner = document.getElementById('unverified-banner');
+    const unverifiedToast = document.getElementById('unverified-toast');
 
     let currentUser = null;
     let currentUserData = null;
     let currentChatId = 'general';
+    let currentChatType = 'general';
     let pendingRegUser = null;
+    let pendingLoginData = null;
+    let phoneConfirmResult = null;
+    let phoneResendInterval = null;
+    let phoneVerifyUid = null;
 
     function showAuthTab(tab, btn) {
       document.querySelectorAll('.auth-form .tab button').forEach(b => b.classList.remove('active'));
@@ -217,32 +277,43 @@
 
     function getInitial(data) {
       if (data && data.username) return data.username[0].toUpperCase();
-      if (data && data.email) return data.email[0].toUpperCase();
+      if (data && data.login) return data.login[0].toUpperCase();
       return '?';
     }
 
     function getDisplayName(data) {
       if (data && data.username) return '@' + data.username;
-      if (data && data.email) return data.email;
+      if (data && data.login) return data.login;
       return 'Пользователь';
     }
 
+    function normalizePhone(phone) {
+      return phone.replace(/[^0-9+]/g, '');
+    }
+
     async function doRegister() {
-      const email = document.getElementById('reg-email').value.trim();
+      const login = document.getElementById('reg-login').value.trim().toLowerCase();
       const pass = document.getElementById('reg-pass').value;
 
-      if (!email || !pass) { alert('Заполните все поля'); return; }
+      if (!login || !pass) { alert('Заполните все поля'); return; }
+      if (!/^[a-z0-9_]{3,20}$/.test(login)) { alert('Логин: 3-20 символов, латиница, цифры, _'); return; }
       if (pass.length < 6) { alert('Пароль минимум 6 символов'); return; }
 
       try {
-        const cred = await auth.createUserWithEmailAndPassword(email, pass);
-        pendingRegUser = cred.user;
+        const loginCheck = await db.ref('loginIndex/' + login).once('value');
+        if (loginCheck.exists()) { alert('Этот логин уже занят'); return; }
 
-        await db.ref('users/' + cred.user.uid).set({
-          email: email,
-          uid: cred.user.uid,
-          createdAt: new Date().toISOString()
+        const fakeEmail = login + '@pulse.internal';
+        const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
+        const user = cred.user;
+
+        await db.ref('users/' + user.uid).set({
+          login: login,
+          uid: user.uid,
+          createdAt: new Date().toISOString(),
+          phoneVerified: false
         });
+        await db.ref('loginIndex/' + login).set(user.uid);
 
         document.getElementById('modal-username').value = '';
         document.getElementById('username-preview').textContent = '';
@@ -254,7 +325,7 @@
       }
     }
 
-    function previewUsername() {
+    function previewModalUsername() {
       const raw = document.getElementById('modal-username').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
       document.getElementById('modal-username').value = raw;
       if (raw.length >= 3) {
@@ -295,12 +366,22 @@
     }
 
     async function doLogin() {
-      const email = document.getElementById('login-email').value.trim();
+      const login = document.getElementById('login-username').value.trim().toLowerCase();
       const pass = document.getElementById('login-pass').value;
 
-      if (!email || !pass) { alert('Заполните все поля'); return; }
+      if (!login || !pass) { alert('Заполните все поля'); return; }
 
       try {
+        const snap = await db.ref('loginIndex/' + login).once('value');
+        if (!snap.exists()) { alert('Пользователь не найден'); return; }
+
+        const uid = snap.val();
+        const userData = await db.ref('users/' + uid).once('value');
+        if (!userData.exists()) { alert('Ошибка профиля'); return; }
+
+        const email = userData.val().login + '@pulse.internal';
+        pendingLoginData = { uid, login, userData: userData.val() };
+
         await auth.signInWithEmailAndPassword(email, pass);
       } catch (e) {
         alert('Ошибка: ' + e.message);
@@ -318,19 +399,41 @@
       const results = [];
 
       try {
-        const allUsernames = await db.ref('usernameIndex').once('value');
-        if (allUsernames.exists()) {
-          const promises = [];
-          allUsernames.forEach(child => {
-            if (child.key.startsWith(q)) {
-              const uid = child.val();
-              if (uid !== (currentUser && currentUser.uid)) {
-                promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? s.val() : null));
+        if (/^[a-z0-9_]/.test(q)) {
+          const allUsernames = await db.ref('usernameIndex').once('value');
+          if (allUsernames.exists()) {
+            const promises = [];
+            allUsernames.forEach(child => {
+              if (child.key.startsWith(q)) {
+                const uid = child.val();
+                if (uid !== (currentUser && currentUser.uid)) {
+                  promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? { ...s.val(), _uid: uid } : null));
+                }
               }
-            }
-          });
-          const users = await Promise.all(promises);
-          users.filter(Boolean).forEach(u => results.push(u));
+            });
+            const users = await Promise.all(promises);
+            users.filter(Boolean).forEach(u => results.push(u));
+          }
+        }
+
+        const normQ = normalizePhone(q);
+        if (/^[0-9]/.test(normQ) && normQ.length >= 4) {
+          const allPhones = await db.ref('phoneIndex').once('value');
+          if (allPhones.exists()) {
+            const promises = [];
+            allPhones.forEach(child => {
+              if (child.key.includes(normQ)) {
+                const uid = child.val();
+                if (uid !== (currentUser && currentUser.uid)) {
+                  promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? { ...s.val(), _uid: uid } : null));
+                }
+              }
+            });
+            const users = await Promise.all(promises);
+            users.filter(Boolean).forEach(u => {
+              if (!results.find(r => r._uid === u._uid)) results.push(u);
+            });
+          }
         }
 
         renderSearchResults(results);
@@ -352,11 +455,13 @@
       results.forEach(u => {
         const div = document.createElement('div');
         div.className = 'list-item';
-        const displayName = u.username ? '@' + u.username : u.email;
+        const displayName = u.username ? '@' + u.username : u.login;
         const initial = getInitial(u);
-        div.innerHTML = `<div class="avatar">${initial}</div><div>${displayName}</div>`;
+        let extra = '';
+        if (u.phone) extra = `<div style="font-size:11px;color:#8899a6">${u.phone}</div>`;
+        div.innerHTML = `<div class="avatar">${initial}</div><div><div>${displayName}</div>${extra}</div>`;
         div.onclick = () => {
-          openPrivateChat(u.uid, displayName);
+          openPrivateChat(u._uid, displayName, u.phoneVerified === true);
           searchResults.style.display = 'none';
           searchResults.innerHTML = '';
           document.querySelector('#search input').value = '';
@@ -365,7 +470,7 @@
       });
     }
 
-    function openPrivateChat(uid, displayName) {
+    function openPrivateChat(uid, displayName, isVerified) {
       const ids = [currentUser.uid, uid].sort();
       const chatId = ids.join('_');
       currentChatId = chatId;
@@ -381,7 +486,7 @@
         div.setAttribute('data-uid', uid);
         const initial = displayName[0].toUpperCase();
         div.innerHTML = `<div class="avatar">${initial}</div><div>${displayName}</div>`;
-        div.onclick = () => openPrivateChat(uid, displayName);
+        div.onclick = () => openPrivateChat(uid, displayName, isVerified);
         chatList.appendChild(div);
       }
 
@@ -401,12 +506,24 @@
     }
 
     function openSettings() {
-      document.getElementById('set-email').value = currentUserData && currentUserData.email ? currentUserData.email : '';
       document.getElementById('set-username').value = currentUserData && currentUserData.username ? currentUserData.username : '';
       document.getElementById('set-username-current').textContent = currentUserData && currentUserData.username ? 'Текущий: @' + currentUserData.username : 'Имя не установлено';
       document.getElementById('set-username-error').textContent = '';
       document.getElementById('set-password').value = '';
       document.getElementById('set-password-error').textContent = '';
+
+      const isVerified = currentUserData && currentUserData.phoneVerified === true;
+      document.getElementById('temp-account-section').style.display = isVerified ? 'none' : 'block';
+      document.getElementById('verified-section').style.display = isVerified ? 'block' : 'none';
+
+      if (isVerified) {
+        document.getElementById('verified-phone').textContent = 'Телефон: ' + currentUserData.phone;
+      } else {
+        const created = currentUserData && currentUserData.createdAt ? new Date(currentUserData.createdAt) : new Date();
+        const deadline = new Date(created.getTime() + 30 * 24 * 60 * 60 * 1000);
+        document.getElementById('temp-deadline').textContent = 'Аккаунт будет удалён после: ' + deadline.toLocaleDateString('ru-RU');
+      }
+
       settingsPanel.classList.add('active');
     }
 
@@ -418,6 +535,7 @@
       const newUsername = document.getElementById('set-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
       const errEl = document.getElementById('set-username-error');
       errEl.textContent = '';
+      errEl.className = 'error-text';
 
       if (newUsername.length < 3) { errEl.textContent = 'Минимум 3 символа'; return; }
       if (newUsername.length > 20) { errEl.textContent = 'Максимум 20 символов'; return; }
@@ -439,7 +557,7 @@
         userAvatar.textContent = newUsername[0].toUpperCase();
         document.getElementById('set-username-current').textContent = 'Текущий: @' + newUsername;
         errEl.textContent = 'Имя изменено!';
-        errEl.style.color = '#2ecc71';
+        errEl.className = 'success-text';
       } catch (e) {
         errEl.textContent = 'Ошибка: ' + e.message;
       }
@@ -449,17 +567,142 @@
       const newPass = document.getElementById('set-password').value;
       const errEl = document.getElementById('set-password-error');
       errEl.textContent = '';
+      errEl.className = 'error-text';
 
       if (newPass.length < 6) { errEl.textContent = 'Минимум 6 символов'; return; }
 
       try {
         await currentUser.updatePassword(newPass);
         errEl.textContent = 'Пароль изменён!';
-        errEl.style.color = '#2ecc71';
+        errEl.className = 'success-text';
         document.getElementById('set-password').value = '';
       } catch (e) {
         errEl.textContent = 'Ошибка: ' + e.message;
       }
+    }
+
+    function openPhoneVerify() {
+      phoneVerifyUid = currentUser.uid;
+      phoneModalOverlay.classList.add('active');
+      phoneStepPhone.style.display = 'block';
+      phoneStepCode.style.display = 'none';
+      document.getElementById('phone-input').value = '';
+      document.getElementById('phone-error').textContent = '';
+      document.getElementById('phone-code-input').value = '';
+      document.getElementById('phone-code-error').textContent = '';
+      clearPhoneResendTimer();
+    }
+
+    function closePhoneModal() {
+      phoneModalOverlay.classList.remove('active');
+      clearPhoneResendTimer();
+    }
+
+    function backToPhoneStep() {
+      phoneStepPhone.style.display = 'block';
+      phoneStepCode.style.display = 'none';
+      clearPhoneResendTimer();
+    }
+
+    async function sendPhoneCode() {
+      const phone = document.getElementById('phone-input').value.trim();
+      const errEl = document.getElementById('phone-error');
+
+      if (!phone || phone.length < 10) { errEl.textContent = 'Введите корректный номер'; return; }
+
+      const normalized = normalizePhone(phone);
+      try {
+        const existing = await db.ref('phoneIndex/' + normalized).once('value');
+        if (existing.exists()) { errEl.textContent = 'Этот номер уже привязан к другому аккаунту'; return; }
+      } catch (e) {
+        errEl.textContent = 'Ошибка проверки номера';
+        return;
+      }
+
+      try {
+        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container-phone', { size: 'invisible' });
+        phoneConfirmResult = await auth.signInWithPhoneNumber(phone, appVerifier);
+        document.getElementById('code-sent-label').textContent = 'Код отправлен на ' + phone;
+        phoneStepPhone.style.display = 'none';
+        phoneStepCode.style.display = 'block';
+        startPhoneResendTimer(phone);
+      } catch (e) {
+        errEl.textContent = 'Ошибка: ' + e.message;
+      }
+    }
+
+    async function verifyPhoneCode() {
+      const code = document.getElementById('phone-code-input').value.trim();
+      if (!code || code.length < 4) {
+        document.getElementById('phone-code-error').textContent = 'Введите код из SMS';
+        return;
+      }
+
+      try {
+        const result = await phoneConfirmResult.confirm(code);
+        const user = result.user;
+        const phone = user.phoneNumber;
+        const normalized = normalizePhone(phone);
+
+        await db.ref('users/' + phoneVerifyUid).update({
+          phone: phone,
+          normalizedPhone: normalized,
+          phoneVerified: true,
+          phoneVerifiedAt: new Date().toISOString()
+        });
+        await db.ref('phoneIndex/' + normalized).set(phoneVerifyUid);
+
+        await auth.signOut();
+
+        phoneModalOverlay.classList.remove('active');
+        closePhoneModal();
+        alert('Номер подтверждён! Войдите снова.');
+      } catch (e) {
+        document.getElementById('phone-code-error').textContent = 'Неверный код';
+      }
+    }
+
+    function startPhoneResendTimer(phone) {
+      let seconds = 30;
+      const timerEl = document.getElementById('resend-timer');
+      const resendBtn = document.getElementById('resend-phone-btn');
+      resendBtn.style.display = 'none';
+      timerEl.textContent = 'Отправить повторно через ' + seconds + 'с';
+      clearPhoneResendTimer();
+      phoneResendInterval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearPhoneResendTimer();
+          timerEl.textContent = '';
+          resendBtn.style.display = 'block';
+        } else {
+          timerEl.textContent = 'Отправить повторно через ' + seconds + 'с';
+        }
+      }, 1000);
+    }
+
+    function clearPhoneResendTimer() {
+      if (phoneResendInterval) {
+        clearInterval(phoneResendInterval);
+        phoneResendInterval = null;
+      }
+    }
+
+    async function resendPhoneCode() {
+      const phone = document.getElementById('phone-input').value.trim();
+      try {
+        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container-phone', { size: 'invisible' });
+        phoneConfirmResult = await auth.signInWithPhoneNumber(phone, appVerifier);
+        startPhoneResendTimer(phone);
+      } catch (e) {
+        document.getElementById('phone-code-error').textContent = 'Ошибка: ' + e.message;
+      }
+    }
+
+    function showToast(msg) {
+      unverifiedToast.textContent = msg;
+      unverifiedToast.classList.add('active');
+      setTimeout(() => unverifiedToast.classList.remove('active'), 5000);
     }
 
     auth.onAuthStateChanged(async (user) => {
@@ -469,7 +712,7 @@
         if (snap.exists()) {
           currentUserData = snap.val();
         } else {
-          currentUserData = { email: user.email, uid: user.uid };
+          currentUserData = { login: '', uid: user.uid, phoneVerified: false, createdAt: new Date().toISOString() };
         }
 
         if (!currentUserData.username) {
@@ -488,6 +731,13 @@
 
         userName.textContent = getDisplayName(currentUserData);
         userAvatar.textContent = getInitial(currentUserData);
+
+        if (currentUserData.phoneVerified !== true) {
+          unverifiedBanner.classList.add('active');
+        } else {
+          unverifiedBanner.classList.remove('active');
+        }
+
         loadMessages();
       } else {
         currentUser = null;
@@ -498,12 +748,18 @@
     function sendMsg() {
       const text = document.getElementById('msg-input').value;
       if (!text || !currentUser) return;
-      const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : currentUser.email;
+
+      if (currentUserData.phoneVerified !== true) {
+        showToast('⚠ У вас не подтверждён номер телефона. Подтвердите в настройках.');
+      }
+
+      const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : currentUserData.login;
       db.ref('messages/' + currentChatId).push({
         user: displayName,
         userId: currentUser.uid,
         text: text,
-        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+        unverified: currentUserData.phoneVerified !== true
       });
       document.getElementById('msg-input').value = '';
     }
@@ -513,9 +769,19 @@
       messages.innerHTML = '';
       db.ref('messages/' + currentChatId).on('child_added', snapshot => {
         const msg = snapshot.val();
+        const isSelf = msg.userId === currentUser.uid;
         const div = document.createElement('div');
-        div.className = 'msg' + (msg.userId === currentUser.uid ? ' self' : '');
-        div.innerHTML = `<div class="author">${msg.user}</div>${msg.text}<span class="time">${msg.time}</span>`;
+        let cls = 'msg';
+        if (isSelf) cls += ' self';
+        if (!isSelf && msg.unverified) cls += ' unverified';
+        div.className = cls;
+
+        let authorHtml = `<div class="author">${msg.user}</div>`;
+        if (!isSelf && msg.unverified) {
+          authorHtml += `<div style="font-size:10px; color:#e74c3c; margin-bottom:3px;">⚠ Номер не подтверждён</div>`;
+        }
+
+        div.innerHTML = `${authorHtml}${msg.text}<span class="time">${msg.time}</span>`;
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
       }, e => console.error('Load messages error:', e));
@@ -528,6 +794,7 @@
         sidebar.style.display = 'none';
         main.style.display = 'none';
         authDiv.style.display = 'flex';
+        unverifiedBanner.classList.remove('active');
         chatList.innerHTML = `<div class="list-item active" onclick="openGeneralChat()"><div class="avatar">O</div><div>Общий чат</div></div>`;
       });
     }
