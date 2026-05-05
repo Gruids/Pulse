@@ -366,6 +366,42 @@
       document.getElementById('auth-reg').style.display = tab === 'reg' ? 'block' : 'none';
     }
 
+    async function doRegister() {
+      const login = document.getElementById('reg-login').value.trim().toLowerCase();
+      const pass = document.getElementById('reg-pass').value;
+      if (!login || !pass) { showToast('Заполните все поля', 'warning'); return; }
+      if (!/^[a-z0-9_]{3,20}$/.test(login)) { showToast('Логин: 3-20 символов, латиница, цифры, _', 'warning'); return; }
+      if (pass.length < 6) { showToast('Пароль минимум 6 символов', 'warning'); return; }
+
+      const fakeEmail = login + '@pulse-messenger.com';
+      try {
+        const existing = await db.ref('loginIndex/' + login).once('value');
+        if (existing.exists()) { showToast('Логин уже занят', 'warning'); return; }
+        const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
+        const user = cred.user;
+        await db.ref('users/' + user.uid).set({ login, uid: user.uid, createdAt: new Date().toISOString(), phoneVerified: false, method: 'login' });
+        await db.ref('loginIndex/' + login).set(user.uid);
+        showUsernameModal();
+      } catch (e) {
+        if (e.code === 'auth/email-already-in-use') { showToast('Логин уже зарегистрирован', 'warning'); }
+        else { showToast('Ошибка: ' + e.message, 'warning'); }
+      }
+    }
+
+    function showUsernameModal() {
+      document.getElementById('modal-username').value = '';
+      document.getElementById('username-preview').textContent = '';
+      document.getElementById('username-error').textContent = '';
+      modalOverlay.classList.add('active');
+      document.getElementById('modal-username').focus();
+    }
+
+    function previewModalUsername() {
+      const raw = document.getElementById('modal-username').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
+      document.getElementById('modal-username').value = raw;
+      document.getElementById('username-preview').textContent = raw.length >= 3 ? '@' + raw : '';
+    }
+
     async function doLogin() {
       const login = document.getElementById('login-username').value.trim().toLowerCase();
       const pass = document.getElementById('login-pass').value;
