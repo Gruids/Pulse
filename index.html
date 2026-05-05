@@ -381,6 +381,11 @@
       } catch (e) { showToast('Ошибка: ' + e.message, 'warning'); }
     }
 
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(e => showToast('Ошибка: ' + e.message, 'warning'));
+    }
+
     function getInitial(data) {
       if (data && data.username) return data.username[0].toUpperCase();
       if (data && data.login) return data.login[0].toUpperCase();
