@@ -241,6 +241,58 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
+    function dbWrite(path, data) {
+      return new Promise((resolve, reject) => {
+        const url = firebaseConfig.databaseURL + '/' + path + '.json';
+        fetch(url + '?auth=' + encodeURIComponent(auth.currentUser.accessToken), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        }).then(r => r.json()).then(resolve).catch(reject);
+      });
+    }
+
+    function dbSet(path, data) {
+      return new Promise((resolve, reject) => {
+        const url = firebaseConfig.databaseURL + '/' + path + '.json';
+        fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        }).then(r => r.json()).then(resolve).catch(reject);
+      });
+    }
+
+    function dbGet(path) {
+      return new Promise((resolve, reject) => {
+        const url = firebaseConfig.databaseURL + '/' + path + '.json';
+        fetch(url).then(r => r.json()).then(resolve).catch(reject);
+      });
+    }
+
+    function dbPush(path, data) {
+      return new Promise((resolve, reject) => {
+        const url = firebaseConfig.databaseURL + '/' + path + '.json';
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        }).then(r => r.json()).then(resolve).catch(reject);
+      });
+    }
+
+    function dbOn(path, callback) {
+      const ref = db.ref(path);
+      ref.on('value', snap => {
+        callback(snap.val());
+      });
+      return ref;
+    }
+
+    function dbOff(path) {
+      db.ref(path).off();
+    }
+
     const authDiv = document.getElementById('auth');
     const modalOverlay = document.getElementById('modal-overlay');
     const settingsPanel = document.getElementById('settings-panel');
@@ -307,15 +359,15 @@
 
         try {
           const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
-          const user = cred.user;
-          await waitForAuth();
+          await waitForAuthState();
+          const user = auth.currentUser;
           await saveUserToDb(user, login);
           showUsernameModal(user);
         } catch (e) {
           if (e.code === 'auth/email-already-in-use') {
             const cred = await auth.signInWithEmailAndPassword(fakeEmail, pass);
-            const user = cred.user;
-            await waitForAuth();
+            await waitForAuthState();
+            const user = auth.currentUser;
             const snap = await db.ref('users/' + user.uid).once('value');
             if (!snap.exists()) {
               await saveUserToDb(user, login);
@@ -333,29 +385,30 @@
       }
     }
 
-    function waitForAuth() {
+    async function waitForAuthState() {
       return new Promise(resolve => {
         if (auth.currentUser && auth.currentUser.uid) {
-          resolve();
+          resolve(auth.currentUser);
           return;
         }
         const unsub = auth.onAuthStateChanged(user => {
           unsub();
-          resolve();
+          resolve(user);
         });
       });
     }
 
     async function saveUserToDb(user, login) {
-      await auth.currentUser.reload();
-      await auth.currentUser.getIdToken(true);
-      await db.ref('users/' + user.uid).set({
+      const u = user || auth.currentUser;
+      if (!u) { alert('Ошибка авторизации, попробуйте снова'); return; }
+      const token = await u.getIdToken(true);
+      await db.ref('users/' + u.uid).set({
         login: login,
-        uid: user.uid,
+        uid: u.uid,
         createdAt: new Date().toISOString(),
         phoneVerified: false
       });
-      await db.ref('loginIndex/' + login).set(user.uid);
+      await db.ref('loginIndex/' + login).set(u.uid);
     }
 
     function showUsernameModal(user) {
@@ -390,17 +443,17 @@
       }
 
       try {
-        await auth.currentUser.reload();
-        await auth.currentUser.getIdToken(true);
+        const user = auth.currentUser;
+        if (!user) { alert('Ошибка авторизации'); return; }
+        const token = await user.getIdToken(true);
         const check = await db.ref('usernameIndex/' + username).once('value');
         if (check.exists()) {
           document.getElementById('username-error').textContent = 'Это имя уже занято';
           return;
         }
 
-        const uid = pendingRegUser.uid;
-        await db.ref('users/' + uid + '/username').set(username);
-        await db.ref('usernameIndex/' + username).set(uid);
+        await db.ref('users/' + user.uid + '/username').set(username);
+        await db.ref('usernameIndex/' + username).set(user.uid);
 
         modalOverlay.classList.remove('active');
         pendingRegUser = null;
