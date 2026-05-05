@@ -364,16 +364,7 @@
           showUsernameModal(user);
         } catch (e) {
           if (e.code === 'auth/email-already-in-use') {
-            const cred = await auth.signInWithEmailAndPassword(fakeEmail, pass);
-            const user = cred.user;
-            const snap = await db.ref('users/' + user.uid).once('value');
-            if (!snap.exists()) {
-              await writeUserToDb(user, login);
-              showUsernameModal(user);
-            } else {
-              alert('Этот логин уже зарегистрирован. Войдите через «Вход».');
-              await auth.signOut();
-            }
+            alert('Этот логин уже зарегистрирован. Войдите через «Вход».');
           } else {
             alert('Ошибка: ' + e.message);
           }
