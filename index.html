@@ -574,6 +574,47 @@
       } catch (e) { document.getElementById('social-username-error').textContent = 'Ошибка: ' + e.message; }
     }
 
+    async function saveUsername() {
+      const username = document.getElementById('modal-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (username.length < 3) { document.getElementById('username-error').textContent = 'Минимум 3 символа'; return; }
+      if (username.length > 20) { document.getElementById('username-error').textContent = 'Максимум 20 символов'; return; }
+
+      const user = auth.currentUser;
+      if (!user || !user.uid) { showToast('Ошибка авторизации', 'warning'); return; }
+
+      try {
+        const snap = await db.ref('usernameIndex/' + username).once('value');
+        if (snap.exists()) { document.getElementById('username-error').textContent = 'Имя занято'; return; }
+
+        const provider = user.providerData[0] ? user.providerData[0].providerId : 'unknown';
+        const method = provider.includes('google') ? 'google' : (currentUserData ? currentUserData.method : 'login');
+        const login = currentUserData ? currentUserData.login : (user.email || 'user_' + user.uid.substring(0, 8));
+        
+        const userData = {
+          uid: user.uid,
+          login: login,
+          username: username,
+          createdAt: currentUserData ? currentUserData.createdAt : new Date().toISOString(),
+          phoneVerified: false,
+          method: method,
+          email: user.email || null
+        };
+
+        await db.ref('users/' + user.uid).set(userData);
+        await db.ref('usernameIndex/' + username).set(user.uid);
+
+        currentUserData = userData;
+        
+        modalOverlay.classList.remove('active');
+        sidebar.style.display = 'flex';
+        main.style.display = 'flex';
+        userName.textContent = getDisplayName(currentUserData);
+        userAvatar.textContent = getInitial(currentUserData);
+        showToast('Имя установлено!', 'success');
+        loadMessages();
+      } catch (e) { showToast('Ошибка: ' + e.message, 'warning'); }
+    }
+
     async function searchUsers(query) {
       if (!query || query.length < 2) { searchResults.style.display = 'none'; searchResults.innerHTML = ''; return; }
       const q = query.trim().toLowerCase().replace('@', '');
