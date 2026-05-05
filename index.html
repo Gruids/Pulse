@@ -129,40 +129,49 @@
 <body>
   <div id="auth">
     <div class="auth-form">
+      <h2>Pulse</h2>
       <div class="tab">
-        <button class="active" onclick="showAuthTab('social', this)">Вход</button>
+        <button class="active" onclick="showAuthTab('login', this)">Вход</button>
         <button onclick="showAuthTab('reg', this)">Регистрация</button>
       </div>
-      <div id="auth-social">
-        <p style="color:#8899a6; text-align:center; margin:10px 0 20px; font-size:14px;">Быстрый вход</p>
+      <div id="auth-login">
+        <div class="field-group">
+          <label>Логин</label>
+          <input id="login-username" placeholder="Ваш логин">
+        </div>
+        <div class="field-group">
+          <label>Пароль</label>
+          <input id="login-pass" type="password" placeholder="Пароль">
+        </div>
+        <button onclick="doLogin()">Войти</button>
+        <div style="text-align:center; color:#8899a6; margin:15px 0 10px; font-size:13px;">или</div>
         <button class="social-btn google" onclick="loginWithGoogle()">
-          <span class="social-icon">G</span> Продолжить с Google
+          <span class="social-icon">G</span> Войти через Google
         </button>
       </div>
       <div id="auth-reg" style="display:none">
-        <p style="color:#8899a6; text-align:center; margin:10px 0 20px; font-size:14px;">Создать аккаунт</p>
         <div class="field-group">
           <label>Придумайте логин</label>
           <input id="reg-login" placeholder="Логин (3-20 символов)">
         </div>
         <div class="field-group">
-          <label>Пароль</label>
+          <label>Придумайте пароль</label>
           <input id="reg-pass" type="password" placeholder="Минимум 6 символов">
         </div>
         <button onclick="doRegister()">Зарегистрироваться</button>
-        <p style="font-size:11px; color:#e74c3c; margin-top:8px; text-align:center;">⚠ Это временный аккаунт (30 дней)</p>
+        <p style="font-size:11px; color:#e74c3c; margin-top:8px; text-align:center;">⚠ Временный аккаунт (30 дней)</p>
       </div>
     </div>
   </div>
 
   <div id="modal-overlay">
     <div class="modal">
-      <h3>Подтверждение номера</h3>
-      <p id="modal-phone-text">Введите номер телефона для завершения регистрации.</p>
-      <input id="phone-input-modal" placeholder="+79001234567" type="tel">
-      <div class="error" id="phone-modal-error"></div>
-      <button id="modal-phone-btn" onclick="sendModalPhoneCode()">Отправить код</button>
-      <div id="recaptcha-container-modal"></div>
+      <h3>Выберите имя пользователя</h3>
+      <p>Люди смогут найти вас по этому имени.</p>
+      <input id="modal-username" placeholder="username" oninput="previewModalUsername()">
+      <div class="hint" id="username-preview"></div>
+      <div class="error" id="username-error"></div>
+      <button onclick="saveUsername()">Продолжить</button>
     </div>
   </div>
 
@@ -353,42 +362,23 @@
     function showAuthTab(tab, btn) {
       document.querySelectorAll('.auth-form .tab button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('auth-social').style.display = tab === 'social' ? 'block' : 'none';
+      document.getElementById('auth-login').style.display = tab === 'login' ? 'block' : 'none';
       document.getElementById('auth-reg').style.display = tab === 'reg' ? 'block' : 'none';
     }
 
-    async function doRegister() {
-      const login = document.getElementById('reg-login').value.trim().toLowerCase();
-      const pass = document.getElementById('reg-pass').value;
+    async function doLogin() {
+      const login = document.getElementById('login-username').value.trim().toLowerCase();
+      const pass = document.getElementById('login-pass').value;
       if (!login || !pass) { showToast('Заполните все поля', 'warning'); return; }
-      if (!/^[a-z0-9_]{3,20}$/.test(login)) { showToast('Логин: 3-20 символов, латиница, цифры, _', 'warning'); return; }
-      if (pass.length < 6) { showToast('Пароль минимум 6 символов', 'warning'); return; }
 
-      const fakeEmail = login + '@pulse-messenger.com';
       try {
-        const existing = await db.ref('loginIndex/' + login).once('value');
-        if (existing.exists()) { showToast('Логин уже занят', 'warning'); return; }
-        const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
-        const user = cred.user;
-        await db.ref('users/' + user.uid).set({ login, uid: user.uid, createdAt: new Date().toISOString(), phoneVerified: false, method: 'login' });
-        await db.ref('loginIndex/' + login).set(user.uid);
-        showUsernameModal(user);
-      } catch (e) {
-        if (e.code === 'auth/email-already-in-use') { showToast('Логин уже зарегистрирован', 'warning'); }
-        else { showToast('Ошибка: ' + e.message, 'warning'); }
-      }
-    }
-
-    function showUsernameModal(user) {
-      document.getElementById('modal-phone-text').textContent = 'Введите номер телефона';
-      document.getElementById('phone-input-modal').value = '';
-      document.getElementById('phone-modal-error').textContent = '';
-      modalOverlay.classList.add('active');
-    }
-
-    function loginWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch(e => showToast('Ошибка: ' + e.message, 'warning'));
+        const snap = await db.ref('loginIndex/' + login).once('value');
+        if (!snap.exists()) { showToast('Пользователь не найден', 'warning'); return; }
+        const uid = snap.val();
+        const userData = await db.ref('users/' + uid).once('value');
+        if (!userData.exists()) { showToast('Ошибка профиля', 'warning'); return; }
+        await auth.signInWithEmailAndPassword(userData.val().login + '@pulse-messenger.com', pass);
+      } catch (e) { showToast('Ошибка: ' + e.message, 'warning'); }
     }
 
     function getInitial(data) {
@@ -824,20 +814,18 @@
         } else {
           authDiv.style.display = 'none';
           modalOverlay.classList.add('active');
-          document.getElementById('phone-input-modal').value = '';
-          document.getElementById('phone-modal-error').textContent = '';
+          document.getElementById('modal-username').value = '';
+          document.getElementById('username-preview').textContent = '';
+          document.getElementById('username-error').textContent = '';
           return;
         }
 
         if (!currentUserData.username) {
           authDiv.style.display = 'none';
-          phoneModalOverlay.classList.add('active');
-          document.getElementById('phone-step-phone').style.display = 'none';
-          document.getElementById('phone-step-code').style.display = 'none';
-          document.getElementById('phone-step-username').style.display = 'block';
-          document.getElementById('phone-step-username-input').value = '';
-          document.getElementById('social-username-preview').textContent = '';
-          document.getElementById('social-username-error').textContent = '';
+          modalOverlay.classList.add('active');
+          document.getElementById('modal-username').value = '';
+          document.getElementById('username-preview').textContent = '';
+          document.getElementById('username-error').textContent = '';
           return;
         }
 
