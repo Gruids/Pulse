@@ -11,16 +11,16 @@
     body { font-family:'Segoe UI',sans-serif; background:#0e1621; color:#fff; height:100vh; display:flex; }
     #sidebar { width:300px; background:#17212b; display:none; flex-direction:column; }
     #sidebar-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
-    .avatar { width:40px; height:40px; border-radius:50%; background:#2b5278; display:flex; align-items:center; justify-content:center; }
-    #tabs { display:flex; border-bottom:1px solid #242f3d; }
-    .tab-btn { flex:1; padding:10px; background:#17212b; border:none; color:#fff; cursor:pointer; }
-    .tab-btn.active { background:#2b5278; }
+    .avatar { width:40px; height:40px; border-radius:50%; background:#2b5278; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; }
     #search { padding:10px; }
     #search input { width:100%; padding:8px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
-    #chat-list, #user-list { flex:1; overflow-y:auto; }
+    #chat-list { flex:1; overflow-y:auto; }
     .list-item { padding:12px 15px; cursor:pointer; display:flex; gap:10px; align-items:center; }
     .list-item:hover { background:#242f3d; }
     .list-item.active { background:#2b5278; }
+    #search-results { max-height:200px; overflow-y:auto; background:#1e2c3a; border-radius:5px; margin-top:5px; display:none; }
+    #search-results .list-item { font-size:14px; }
+    #search-results .list-item:active { background:#2b5278; }
     #main { flex:1; display:none; flex-direction:column; }
     #chat-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
     #messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
@@ -32,10 +32,16 @@
     #input-area input { flex:1; padding:10px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
     #input-area button { padding:10px 20px; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
     #auth { position:fixed; inset:0; background:#0e1621; display:flex; justify-content:center; align-items:center; }
-    .auth-form { background:#17212b; padding:30px; border-radius:10px; width:320px; }
+    .auth-form { background:#17212b; padding:30px; border-radius:10px; width:340px; }
     .auth-form h2 { margin-bottom:20px; text-align:center; }
-    .auth-form input { width:100%; padding:10px; margin:10px 0; border:none; border-radius:5px; background:#242f3d; color:#fff; }
-    .auth-form button { width:100%; padding:10px; margin:5px 0; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
+    .auth-form input { width:100%; padding:10px; margin:8px 0; border:none; border-radius:5px; background:#242f3d; color:#fff; }
+    .auth-form button { width:100%; padding:10px; margin:8px 0; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; font-size:14px; }
+    .auth-form .hint { font-size:12px; color:#8899a6; margin:4px 0 8px; }
+    .auth-form .tab { display:flex; margin-bottom:15px; }
+    .auth-form .tab button { flex:1; margin:0; border-radius:5px 5px 0 0; background:#242f3d; font-size:13px; }
+    .auth-form .tab button.active { background:#2b5278; }
+    .field-group { margin:8px 0; }
+    .field-group label { font-size:12px; color:#8899a6; display:block; margin-bottom:4px; }
   </style>
 </head>
 <body>
@@ -45,6 +51,32 @@
         <button class="active" onclick="showTab('login', this)">Вход</button>
         <button onclick="showTab('reg', this)">Регистрация</button>
       </div>
+      <div id="login-tab">
+        <input id="login-identifier" placeholder="Email или телефон">
+        <input id="login-pass" type="password" placeholder="Пароль">
+        <button onclick="login()">Войти</button>
+      </div>
+      <div id="reg-tab" style="display:none">
+        <div class="field-group">
+          <label>Email</label>
+          <input id="reg-user" placeholder="Email">
+        </div>
+        <div class="field-group">
+          <label>Телефон (для поиска)</label>
+          <input id="reg-phone" placeholder="+79001234567">
+        </div>
+        <div class="field-group">
+          <label>Имя пользователя (как в Telegram, без @)</label>
+          <input id="reg-username" placeholder="username">
+        </div>
+        <div class="field-group">
+          <label>Пароль (мин 6 символов)</label>
+          <input id="reg-pass" type="password" placeholder="Пароль">
+        </div>
+        <button onclick="register()">Зарегистрироваться</button>
+      </div>
+    </div>
+  </div>
       <div id="login-tab">
         <input id="login-user" placeholder="Email">
         <input id="login-pass" type="password" placeholder="Пароль">
@@ -64,18 +96,16 @@
       <span id="user-name"></span>
       <button onclick="logout()" style="margin-left:auto; background:#242f3d; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Выход</button>
     </div>
-    <div id="tabs">
-      <button class="tab-btn active" onclick="switchTab('chats', this)">Чаты</button>
-      <button class="tab-btn" onclick="switchTab('users', this)">Люди</button>
+    <div id="search">
+      <input placeholder="Поиск по имени или телефону..." oninput="searchUsers(this.value)">
+      <div id="search-results"></div>
     </div>
-    <div id="search"><input placeholder="Поиск..." oninput="filterItems(this.value)"></div>
     <div id="chat-list">
       <div class="list-item active" onclick="openGeneralChat()">
         <div class="avatar">O</div>
         <div>Общий чат</div>
       </div>
     </div>
-    <div id="user-list" style="display:none"></div>
   </div>
 
   <div id="main">
@@ -113,69 +143,12 @@
     const userAvatar = document.getElementById('user-avatar');
     const messages = document.getElementById('messages');
     const chatList = document.getElementById('chat-list');
-    const userList = document.getElementById('user-list');
+    const searchResults = document.getElementById('search-results');
     const chatTitle = document.getElementById('chat-title');
     let currentUser = null;
     let currentChatId = 'general';
     let currentChatType = 'general';
-
-    function switchTab(tab, btn) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (tab === 'chats') {
-        chatList.style.display = 'block';
-        userList.style.display = 'none';
-      } else {
-        chatList.style.display = 'none';
-        userList.style.display = 'block';
-        loadUsers();
-      }
-    }
-
-    function loadUsers() {
-      userList.innerHTML = 'Загрузка...';
-      db.ref('users').once('value')
-        .then(snapshot => {
-          userList.innerHTML = '';
-          if (!snapshot.exists()) {
-            userList.innerHTML = '<div class="list-item">Нет пользователей</div>';
-            return;
-          }
-          snapshot.forEach(child => {
-            const user = child.val();
-            if (user.email === currentUser.email) return;
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerHTML = `<div class="avatar">${user.email[0].toUpperCase()}</div><div>${user.email}</div>`;
-            div.onclick = () => openPrivateChat(child.key, user.email);
-            userList.appendChild(div);
-          });
-        })
-        .catch(e => {
-          userList.innerHTML = 'Ошибка: ' + e.message;
-          console.error('Load users error:', e);
-        });
-    }
-
-    function openPrivateChat(uid, email) {
-      const ids = [currentUser.uid, uid].sort();
-      const chatId = ids.join('_');
-      currentChatId = chatId;
-      currentChatType = 'private';
-      chatTitle.textContent = email;
-      messages.innerHTML = '';
-      loadMessages();
-      document.querySelectorAll('#user-list .list-item').forEach(el => el.classList.remove('active'));
-      event.target.closest('.list-item').classList.add('active');
-    }
-
-    function openGeneralChat() {
-      currentChatId = 'general';
-      currentChatType = 'general';
-      chatTitle.textContent = 'Общий чат';
-      messages.innerHTML = '';
-      loadMessages();
-    }
+    let currentUserData = null;
 
     function showTab(tab, btn) {
       document.getElementById('login-tab').style.display = tab === 'login' ? 'block' : 'none';
@@ -184,51 +157,226 @@
       btn.classList.add('active');
     }
 
-    function register() {
-      const email = document.getElementById('reg-user').value;
+    async function register() {
+      const email = document.getElementById('reg-user').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const username = document.getElementById('reg-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
       const pass = document.getElementById('reg-pass').value;
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          db.ref('users/' + user.uid).set({
-            email: user.email,
-            uid: user.uid,
-            createdAt: new Date().toISOString()
-          }, (error) => {
-            if (error) {
-              alert('Ошибка записи в базу: ' + error.message);
-            } else {
-              alert('Регистрация успешна! UID: ' + user.uid);
-            }
-          });
-        })
-        .catch(e => alert('Ошибка регистрации: ' + e.message));
+
+      if (!email || !pass) { alert('Email и пароль обязательны'); return; }
+      if (!phone) { alert('Укажите телефон'); return; }
+      if (!username || username.length < 3) { alert('Имя пользователя — минимум 3 символа (латиница, цифры, _)'); return; }
+
+      try {
+        const phoneCheck = await db.ref('phoneIndex/' + normalizePhone(phone)).once('value');
+        if (phoneCheck.exists()) { alert('Этот телефон уже зарегистрирован'); return; }
+
+        const usernameCheck = await db.ref('usernameIndex/' + username).once('value');
+        if (usernameCheck.exists()) { alert('Это имя пользователя уже занято'); return; }
+
+        const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
+        const user = userCredential.user;
+
+        await db.ref('users/' + user.uid).set({
+          email: user.email,
+          phone: phone,
+          username: username,
+          uid: user.uid,
+          createdAt: new Date().toISOString()
+        });
+
+        await db.ref('phoneIndex/' + normalizePhone(phone)).set(user.uid);
+        await db.ref('usernameIndex/' + username).set(user.uid);
+
+        alert('Регистрация успешна!');
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
     }
 
-    function login() {
-      const email = document.getElementById('login-user').value;
+    async function login() {
+      const identifier = document.getElementById('login-identifier').value.trim();
       const pass = document.getElementById('login-pass').value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .catch(e => alert('Ошибка: ' + e.message));
+
+      if (!identifier || !pass) { alert('Заполните все поля'); return; }
+
+      let email = identifier;
+
+      if (identifier.includes('@')) {
+        email = identifier;
+      } else {
+        const normalized = normalizePhone(identifier);
+        try {
+          const snapshot = await db.ref('phoneIndex/' + normalized).once('value');
+          if (!snapshot.exists()) { alert('Пользователь с таким телефоном не найден'); return; }
+          const uid = snapshot.val();
+          const userSnap = await db.ref('users/' + uid + '/email').once('value');
+          email = userSnap.val();
+          if (!email) { alert('Ошибка поиска пользователя'); return; }
+        } catch (e) {
+          alert('Ошибка: ' + e.message);
+          return;
+        }
+      }
+
+      auth.signInWithEmailAndPassword(email, pass).catch(e => alert('Ошибка: ' + e.message));
     }
 
-    auth.onAuthStateChanged(user => {
+    function normalizePhone(phone) {
+      return phone.replace(/[^0-9+]/g, '');
+    }
+
+    async function searchUsers(query) {
+      if (!query || query.length < 2) {
+        searchResults.style.display = 'none';
+        searchResults.innerHTML = '';
+        return;
+      }
+
+      const q = query.trim().toLowerCase();
+      const results = [];
+
+      try {
+        if (/^[a-z0-9_]/.test(q)) {
+          const snap = await db.ref('usernameIndex/' + q).once('value');
+          if (snap.exists()) {
+            const uid = snap.val();
+            const userData = await db.ref('users/' + uid).once('value');
+            if (userData.exists()) {
+              const u = userData.val();
+              if (u.uid !== currentUser.uid) {
+                results.push(u);
+              }
+            }
+          }
+
+          const allUsernames = await db.ref('usernameIndex').once('value');
+          if (allUsernames.exists()) {
+            allUsernames.forEach(child => {
+              if (child.key.startsWith(q)) {
+                const uid = child.val();
+                if (uid !== currentUser.uid && !results.find(r => r.uid === uid)) {
+                  db.ref('users/' + uid).once('value').then(s => {
+                    if (s.exists()) results.push(s.val());
+                    renderSearchResults(results);
+                  });
+                }
+              }
+            });
+          }
+        }
+
+        const normQ = normalizePhone(q);
+        if (/^[0-9+]/.test(normQ) && normQ.length >= 4) {
+          const allPhones = await db.ref('phoneIndex').once('value');
+          if (allPhones.exists()) {
+            allPhones.forEach(child => {
+              if (child.key.includes(normQ)) {
+                const uid = child.val();
+                if (uid !== currentUser.uid && !results.find(r => r.uid === uid)) {
+                  db.ref('users/' + uid).once('value').then(s => {
+                    if (s.exists()) results.push(s.val());
+                    renderSearchResults(results);
+                  });
+                }
+              }
+            });
+          }
+        }
+
+        renderSearchResults(results);
+      } catch (e) {
+        console.error('Search error:', e);
+      }
+    }
+
+    function renderSearchResults(results) {
+      if (results.length === 0) {
+        searchResults.style.display = 'none';
+        searchResults.innerHTML = '';
+        return;
+      }
+
+      searchResults.style.display = 'block';
+      searchResults.innerHTML = '';
+
+      results.forEach(u => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        const displayName = u.username ? '@' + u.username : u.email;
+        const initial = (u.username || u.email)[0].toUpperCase();
+        div.innerHTML = `<div class="avatar">${initial}</div><div><div>${displayName}</div><div style="font-size:11px;color:#8899a6">${u.phone || ''}</div></div>`;
+        div.onclick = () => {
+          openPrivateChat(u.uid, displayName);
+          searchResults.style.display = 'none';
+          searchResults.innerHTML = '';
+          document.querySelector('#search input').value = '';
+        };
+        searchResults.appendChild(div);
+      });
+    }
+
+    function openPrivateChat(uid, displayName) {
+      const ids = [currentUser.uid, uid].sort();
+      const chatId = ids.join('_');
+      currentChatId = chatId;
+      currentChatType = 'private';
+      chatTitle.textContent = displayName;
+      messages.innerHTML = '';
+      loadMessages();
+
+      const existing = document.querySelector(`#chat-list[data-uid="${uid}"]`);
+      if (!existing) {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.setAttribute('data-uid', uid);
+        const initial = displayName[0].toUpperCase();
+        div.innerHTML = `<div class="avatar">${initial}</div><div>${displayName}</div>`;
+        div.onclick = () => openPrivateChat(uid, displayName);
+        chatList.appendChild(div);
+      }
+
+      document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
+      const target = document.querySelector(`#chat-list[data-uid="${uid}"]`);
+      if (target) target.classList.add('active');
+    }
+
+    function openGeneralChat() {
+      currentChatId = 'general';
+      currentChatType = 'general';
+      chatTitle.textContent = 'Общий чат';
+      messages.innerHTML = '';
+      loadMessages();
+      document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
+      chatList.querySelector('.list-item').classList.add('active');
+    }
+
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentUser = user;
+        const snap = await db.ref('users/' + user.uid).once('value');
+        if (snap.exists()) currentUserData = snap.val();
+
         authDiv.style.display = 'none';
         sidebar.style.display = 'flex';
         main.style.display = 'flex';
-        userName.textContent = user.email;
-        userAvatar.textContent = user.email[0].toUpperCase();
+
+        const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : user.email;
+        userName.textContent = displayName;
+        userAvatar.textContent = (currentUserData && currentUserData.username ? currentUserData.username : user.email)[0].toUpperCase();
         loadMessages();
+      } else {
+        currentUser = null;
+        currentUserData = null;
       }
     });
 
     function sendMsg() {
       const text = document.getElementById('msg-input').value;
       if (!text || !currentUser) return;
+      const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : currentUser.email;
       db.ref('messages/' + currentChatId).push({
-        user: currentUser.email,
+        user: displayName,
         userId: currentUser.uid,
         text: text,
         time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
@@ -242,26 +390,21 @@
       db.ref('messages/' + currentChatId).on('child_added', snapshot => {
         const msg = snapshot.val();
         const div = document.createElement('div');
-        div.className = 'msg' + (msg.user === currentUser.email ? ' self' : '');
+        div.className = 'msg' + (msg.userId === currentUser.uid ? ' self' : '');
         div.innerHTML = `<div class="author">${msg.user}</div>${msg.text}<span class="time">${msg.time}</span>`;
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
       }, e => console.error('Load messages error:', e));
     }
 
-    function filterItems(q) {
-      const items = document.querySelectorAll('#chat-list .list-item, #user-list .list-item');
-      items.forEach(el => {
-        el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? 'flex' : 'none';
-      });
-    }
-
     function logout() {
       auth.signOut().then(() => {
         currentUser = null;
+        currentUserData = null;
         sidebar.style.display = 'none';
         main.style.display = 'none';
         authDiv.style.display = 'flex';
+        chatList.innerHTML = `<div class="list-item active" onclick="openGeneralChat()"><div class="avatar">O</div><div>Общий чат</div></div>`;
       });
     }
   </script>
