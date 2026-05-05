@@ -359,18 +359,16 @@
 
         try {
           const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
-          await waitForAuthState();
-          const user = auth.currentUser;
-          await saveUserToDb(user, login);
+          const user = cred.user;
+          await writeUserToDb(user, login);
           showUsernameModal(user);
         } catch (e) {
           if (e.code === 'auth/email-already-in-use') {
             const cred = await auth.signInWithEmailAndPassword(fakeEmail, pass);
-            await waitForAuthState();
-            const user = auth.currentUser;
+            const user = cred.user;
             const snap = await db.ref('users/' + user.uid).once('value');
             if (!snap.exists()) {
-              await saveUserToDb(user, login);
+              await writeUserToDb(user, login);
               showUsernameModal(user);
             } else {
               alert('Этот логин уже зарегистрирован. Войдите через «Вход».');
@@ -385,30 +383,20 @@
       }
     }
 
-    async function waitForAuthState() {
-      return new Promise(resolve => {
-        if (auth.currentUser && auth.currentUser.uid) {
-          resolve(auth.currentUser);
-          return;
-        }
-        const unsub = auth.onAuthStateChanged(user => {
-          unsub();
-          resolve(user);
+    function writeUserToDb(user, login) {
+      return new Promise((resolve, reject) => {
+        db.ref('users/' + user.uid).set({
+          login: login,
+          uid: user.uid,
+          createdAt: new Date().toISOString(),
+          phoneVerified: false
+        }, (err1) => {
+          if (err1) { reject(err1); return; }
+          db.ref('loginIndex/' + login).set(user.uid, (err2) => {
+            if (err2) reject(err2); else resolve();
+          });
         });
       });
-    }
-
-    async function saveUserToDb(user, login) {
-      const u = user || auth.currentUser;
-      if (!u) { alert('Ошибка авторизации, попробуйте снова'); return; }
-      const token = await u.getIdToken(true);
-      await db.ref('users/' + u.uid).set({
-        login: login,
-        uid: u.uid,
-        createdAt: new Date().toISOString(),
-        phoneVerified: false
-      });
-      await db.ref('loginIndex/' + login).set(u.uid);
     }
 
     function showUsernameModal(user) {
@@ -442,18 +430,24 @@
         return;
       }
 
+      const user = auth.currentUser || pendingRegUser;
+      if (!user || !user.uid) { alert('Ошибка авторизации'); return; }
+
       try {
-        const user = auth.currentUser;
-        if (!user) { alert('Ошибка авторизации'); return; }
-        const token = await user.getIdToken(true);
-        const check = await db.ref('usernameIndex/' + username).once('value');
-        if (check.exists()) {
+        const snap = await db.ref('usernameIndex/' + username).once('value');
+        if (snap.exists()) {
           document.getElementById('username-error').textContent = 'Это имя уже занято';
           return;
         }
 
-        await db.ref('users/' + user.uid + '/username').set(username);
-        await db.ref('usernameIndex/' + username).set(user.uid);
+        await new Promise((resolve, reject) => {
+          db.ref('users/' + user.uid + '/username').set(username, e1 => {
+            if (e1) { reject(e1); return; }
+            db.ref('usernameIndex/' + username).set(user.uid, e2 => {
+              if (e2) reject(e2); else resolve();
+            });
+          });
+        });
 
         modalOverlay.classList.remove('active');
         pendingRegUser = null;
