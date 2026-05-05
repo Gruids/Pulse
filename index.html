@@ -134,9 +134,6 @@
       <button class="social-btn apple" onclick="loginWithApple()">
         <span class="social-icon">🍎</span> Продолжить с Apple
       </button>
-      <button class="social-btn playgames" onclick="loginWithPlayGames()">
-        <span class="social-icon">🎮</span> Продолжить с Play Games
-      </button>
     </div>
   </div>
 
@@ -343,10 +340,6 @@
     function loginWithApple() {
       const provider = new firebase.auth.OAuthProvider('apple.com');
       auth.signInWithPopup(provider).catch(e => showToast('Ошибка Apple: ' + e.message, 'warning'));
-    }
-
-    function loginWithPlayGames() {
-      showToast('Play Games: требуется Android приложение', 'warning');
     }
 
     function getInitial(data) {
