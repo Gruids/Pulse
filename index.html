@@ -425,6 +425,7 @@
       if (!user || !user.uid) { alert('Ошибка авторизации'); return; }
 
       try {
+        await user.getIdToken(true);
         const snap = await db.ref('usernameIndex/' + username).once('value');
         if (snap.exists()) {
           document.getElementById('username-error').textContent = 'Это имя уже занято';
