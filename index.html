@@ -308,12 +308,14 @@
         try {
           const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
           const user = cred.user;
+          await waitForAuth();
           await saveUserToDb(user, login);
           showUsernameModal(user);
         } catch (e) {
           if (e.code === 'auth/email-already-in-use') {
             const cred = await auth.signInWithEmailAndPassword(fakeEmail, pass);
             const user = cred.user;
+            await waitForAuth();
             const snap = await db.ref('users/' + user.uid).once('value');
             if (!snap.exists()) {
               await saveUserToDb(user, login);
@@ -331,7 +333,21 @@
       }
     }
 
+    function waitForAuth() {
+      return new Promise(resolve => {
+        if (auth.currentUser && auth.currentUser.uid) {
+          resolve();
+          return;
+        }
+        const unsub = auth.onAuthStateChanged(user => {
+          unsub();
+          resolve();
+        });
+      });
+    }
+
     async function saveUserToDb(user, login) {
+      await auth.currentUser.reload();
       await auth.currentUser.getIdToken(true);
       await db.ref('users/' + user.uid).set({
         login: login,
@@ -374,6 +390,8 @@
       }
 
       try {
+        await auth.currentUser.reload();
+        await auth.currentUser.getIdToken(true);
         const check = await db.ref('usernameIndex/' + username).once('value');
         if (check.exists()) {
           document.getElementById('username-error').textContent = 'Это имя уже занято';
@@ -381,7 +399,6 @@
         }
 
         const uid = pendingRegUser.uid;
-        await auth.currentUser.getIdToken(true);
         await db.ref('users/' + uid + '/username').set(username);
         await db.ref('usernameIndex/' + username).set(uid);
 
