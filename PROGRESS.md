@@ -37,13 +37,13 @@
   ```
 
 ### 3. Функционал мессенджера (файл `index.html`)
-- Регистрация и вход через Email/Password
-- Сохранение пользователей в базу данных (`users/{uid}`)
-- Общий чат (сообщения в `messages/general`)
-- Список пользователей (вкладка "Люди")
-- Приватные чаты между пользователями (ID чата формируется из UID)
+- Регистрация с **телефоном** и **именем пользователя** (@username как в Telegram)
+- Вход по **email или телефону**
+- Поиск людей по **username или телефону** (строка поиска в сайдбаре)
+- Вкладка "Люди" **удалена** — больше нет списка всех пользователей
+- Приватные чаты — найди человека через поиск → нажми → начни чат
+- Общий чат
 - Кнопка выхода
-- Поиск по пользователям и чатам
 
 ### 4. Структура проекта
 ```
@@ -91,7 +91,40 @@ cd "D:\месенджер"; & $git status
 & $git push origin main
 ```
 
-### 8. Текущий статус
+### 8. Обновление правил Firebase (СДЕЛАТЬ ВРУЧНУЮ!)
+Firebase Console → Realtime Database → Rules → заменить на:
+```json
+{
+  "rules": {
+    "users": { ".read": "auth != null", ".write": "auth != null" },
+    "messages": { ".read": "auth != null", ".write": "auth != null" },
+    "phoneIndex": { ".read": true, ".write": "auth != null" },
+    "usernameIndex": { ".read": true, ".write": "auth != null" }
+  }
+}
+```
+Это нужно для входа по телефону и поиска по username без авторизации.
+
+### 9. Новая структура базы данных
+```
+users/{uid}
+  ├── email
+  ├── phone
+  ├── username
+  ├── uid
+  └── createdAt
+
+phoneIndex/{normalized_phone} → uid
+usernameIndex/{username} → uid
+
+messages/{chatId}/{pushId}
+  ├── user (display name)
+  ├── userId
+  ├── text
+  └── time
+```
+
+### 10. Текущий статус
 - ✅ Регистрация и вход работают
 - ✅ Пользователи сохраняются в Firebase
 - ✅ Общий чат работает
