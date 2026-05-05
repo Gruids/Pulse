@@ -131,9 +131,6 @@
       <button class="social-btn google" onclick="loginWithGoogle()">
         <span class="social-icon">G</span> Продолжить с Google
       </button>
-      <button class="social-btn apple" onclick="loginWithApple()">
-        <span class="social-icon">🍎</span> Продолжить с Apple
-      </button>
     </div>
   </div>
 
@@ -334,12 +331,7 @@
 
     function loginWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch(e => showToast('Ошибка Google: ' + e.message, 'warning'));
-    }
-
-    function loginWithApple() {
-      const provider = new firebase.auth.OAuthProvider('apple.com');
-      auth.signInWithPopup(provider).catch(e => showToast('Ошибка Apple: ' + e.message, 'warning'));
+      auth.signInWithPopup(provider).catch(e => showToast('Ошибка: ' + e.message, 'warning'));
     }
 
     function getInitial(data) {
