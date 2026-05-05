@@ -8,28 +8,36 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Segoe UI',sans-serif; background:#0e1621; color:#fff; height:100vh; display:flex; }
-    #sidebar { width:300px; background:#17212b; display:none; flex-direction:column; }
-    #sidebar-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
+    body { font-family:'Segoe UI',sans-serif; background:#0e1621; color:#fff; height:100vh; display:flex; overflow:hidden; }
+    #sidebar { width:300px; background:#17212b; display:none; flex-direction:column; flex-shrink:0; }
+    #sidebar-header { padding:12px 15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
     .avatar { width:40px; height:40px; border-radius:50%; background:#2b5278; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; flex-shrink:0; }
+    .avatar.large { width:80px; height:80px; font-size:32px; margin:0 auto 15px; }
     #search { padding:10px; }
     #search input { width:100%; padding:8px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
     #chat-list { flex:1; overflow-y:auto; }
-    .list-item { padding:12px 15px; cursor:pointer; display:flex; gap:10px; align-items:center; }
+    .list-item { padding:12px 15px; cursor:pointer; display:flex; gap:10px; align-items:center; border-bottom:1px solid #1e2c3a; }
     .list-item:hover { background:#242f3d; }
     .list-item.active { background:#2b5278; }
     #search-results { max-height:200px; overflow-y:auto; background:#1e2c3a; border-radius:5px; margin-top:5px; display:none; }
-    #search-results .list-item { font-size:14px; }
+    #search-results .list-item { font-size:14px; border-bottom:none; }
     #search-results .list-item:active { background:#2b5278; }
-    #main { flex:1; display:none; flex-direction:column; }
-    #chat-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
+    #main { flex:1; display:none; flex-direction:column; min-width:0; }
+    #chat-header { padding:12px 15px; background:#242f3d; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .menu-btn { background:none; border:none; color:#fff; cursor:pointer; font-size:22px; padding:5px; }
+    .menu-btn:hover { color:#5eb5f7; }
     #messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
-    .msg { max-width:60%; padding:8px 12px; border-radius:8px; background:#182633; word-wrap:break-word; }
+    .msg { max-width:60%; padding:8px 12px; border-radius:8px; background:#182633; word-wrap:break-word; position:relative; }
     .msg.self { background:#2b5278; align-self:flex-end; }
     .msg .author { font-size:12px; color:#5eb5f7; margin-bottom:4px; }
     .msg .time { font-size:11px; color:#aaa; float:right; margin-left:10px; }
-    .msg.unverified { border: 1px solid #e74c3c; }
-    #input-area { padding:10px; background:#17212b; display:flex; gap:10px; }
+    .msg.unverified { border:1px solid #e74c3c; }
+    .msg-actions { position:absolute; top:-8px; right:4px; display:none; }
+    .msg:hover .msg-actions { display:block; }
+    .msg-actions button { background:#1e2c3a; border:1px solid #2b5278; color:#fff; cursor:pointer; border-radius:50%; width:24px; height:24px; font-size:12px; }
+    .msg-actions button:hover { background:#2b5278; }
+    .msg-actions button.favorited { background:#f39c12; border-color:#f39c12; }
+    #input-area { padding:10px; background:#17212b; display:flex; gap:10px; flex-shrink:0; }
     #input-area input { flex:1; padding:10px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
     #input-area button { padding:10px 20px; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
     #auth { position:fixed; inset:0; background:#0e1621; display:flex; justify-content:center; align-items:center; }
@@ -43,8 +51,48 @@
     .field-group { margin:6px 0; }
     .field-group label { font-size:13px; color:#8899a6; display:block; margin-bottom:3px; }
     .hint { font-size:12px; color:#5eb5f7; margin:4px 0 6px; }
-    .warning-banner { background:#e74c3c; color:#fff; padding:8px 15px; font-size:13px; text-align:center; display:none; }
+    .warning-banner { background:#e74c3c; color:#fff; padding:8px 15px; font-size:13px; text-align:center; display:none; flex-shrink:0; }
     .warning-banner.active { display:block; }
+
+    /* Slide-out menu */
+    #menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:none; }
+    #menu-overlay.active { display:block; }
+    #menu-panel { position:fixed; top:0; left:-360px; width:340px; max-width:85vw; height:100vh; background:#17212b; z-index:600; transition:left 0.25s ease; overflow-y:auto; display:flex; flex-direction:column; }
+    #menu-panel.active { left:0; }
+    .menu-header { padding:25px 20px; background:#242f3d; display:flex; align-items:center; gap:15px; border-bottom:2px solid #2b5278; }
+    .menu-header-info { flex:1; }
+    .menu-header-info h3 { font-size:16px; margin-bottom:3px; }
+    .menu-header-info p { font-size:13px; color:#8899a6; }
+    .menu-close { background:none; border:none; color:#fff; cursor:pointer; font-size:24px; padding:5px; }
+    .menu-nav { padding:10px 0; flex:1; }
+    .menu-nav-item { padding:14px 20px; display:flex; align-items:center; gap:12px; cursor:pointer; font-size:15px; }
+    .menu-nav-item:hover { background:#242f3d; }
+    .menu-nav-item.active { background:#2b5278; }
+    .menu-nav-item .icon { font-size:18px; width:24px; text-align:center; }
+    .menu-footer { padding:15px 20px; border-top:1px solid #242f3d; }
+    .menu-footer button { width:100%; padding:10px; border:none; border-radius:8px; background:#c0392b; color:#fff; cursor:pointer; font-size:14px; }
+
+    /* Menu content area */
+    .menu-content { flex:1; overflow-y:auto; display:none; }
+    .menu-content.active { display:block; }
+    .menu-content-inner { padding:20px; }
+    .menu-content h2 { font-size:17px; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #242f3d; }
+    .info-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #1e2c3a; font-size:14px; }
+    .info-row .label { color:#8899a6; }
+    .info-row .value { text-align:right; max-width:60%; word-break:break-all; }
+    .edit-section { margin-top:15px; }
+    .edit-section label { font-size:13px; color:#8899a6; display:block; margin-bottom:4px; }
+    .edit-section input { width:100%; padding:10px; border:none; border-radius:6px; background:#242f3d; color:#fff; font-size:14px; }
+    .edit-section .save-btn { padding:8px 20px; border:none; border-radius:6px; background:#2b5278; color:#fff; cursor:pointer; font-size:13px; margin-top:6px; }
+    .edit-section .error-text { color:#e74c3c; font-size:12px; margin-top:3px; }
+    .edit-section .success-text { color:#2ecc71; font-size:12px; margin-top:3px; }
+
+    /* Favorites list */
+    .fav-item { padding:12px 15px; border-bottom:1px solid #1e2c3a; cursor:pointer; }
+    .fav-item:hover { background:#242f3d; }
+    .fav-item .fav-text { font-size:14px; line-height:1.4; margin-bottom:4px; }
+    .fav-item .fav-meta { font-size:11px; color:#8899a6; }
+    .fav-item .remove-fav { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px; float:right; }
 
     /* Modal */
     #modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1000; }
@@ -55,23 +103,6 @@
     .modal input { width:100%; padding:11px; margin:6px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:14px; }
     .modal button { width:100%; padding:11px; margin:6px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:14px; font-weight:bold; }
     .modal .error { color:#e74c3c; font-size:12px; margin-top:4px; min-height:16px; }
-    .modal .secondary-btn { background:#242f3d; font-weight:normal; font-size:13px; }
-
-    /* Settings */
-    #settings-panel { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1000; }
-    #settings-panel.active { display:flex; }
-    .settings-box { background:#17212b; padding:25px; border-radius:12px; width:400px; max-width:90vw; max-height:85vh; overflow-y:auto; }
-    .settings-box h3 { margin-bottom:18px; font-size:17px; text-align:center; }
-    .settings-section { background:#1e2c3a; border-radius:8px; padding:15px; margin-bottom:12px; }
-    .settings-section.warning { border:1px solid #e74c3c; }
-    .settings-section h4 { font-size:14px; margin-bottom:8px; }
-    .settings-section.warning h4 { color:#e74c3c; }
-    .settings-section p { font-size:12px; color:#8899a6; margin-bottom:8px; line-height:1.4; }
-    .settings-section input { width:100%; padding:9px; border:none; border-radius:6px; background:#242f3d; color:#fff; font-size:13px; }
-    .settings-section .save-btn { padding:8px 16px; border:none; border-radius:6px; background:#2b5278; color:#fff; cursor:pointer; font-size:12px; margin-top:6px; }
-    .settings-section .error-text { color:#e74c3c; font-size:11px; margin-top:3px; }
-    .settings-section .success-text { color:#2ecc71; font-size:11px; margin-top:3px; }
-    .settings-close { width:100%; padding:11px; margin-top:5px; border:none; border-radius:8px; background:#242f3d; color:#fff; cursor:pointer; font-size:14px; }
 
     /* Phone verify modal */
     #phone-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:1001; }
@@ -84,9 +115,11 @@
     .phone-modal .error { color:#e74c3c; font-size:12px; margin-top:3px; text-align:center; min-height:16px; }
     .phone-modal .back-link { background:none; border:none; color:#5eb5f7; cursor:pointer; font-size:13px; display:block; margin-bottom:8px; }
 
-    /* Unverified warning toast */
-    #unverified-toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#e74c3c; color:#fff; padding:12px 20px; border-radius:8px; font-size:13px; display:none; z-index:2000; max-width:400px; text-align:center; }
-    #unverified-toast.active { display:block; }
+    /* Toast */
+    #toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#2b5278; color:#fff; padding:10px 20px; border-radius:8px; font-size:13px; display:none; z-index:2000; max-width:400px; text-align:center; }
+    #toast.active { display:block; }
+    #toast.warning { background:#e74c3c; }
+    #toast.success { background:#27ae60; }
   </style>
 </head>
 <body>
@@ -100,11 +133,11 @@
       <div id="auth-login">
         <div class="field-group">
           <label>Логин</label>
-          <input id="login-username" placeholder="Ваш логин" autocomplete="username">
+          <input id="login-username" placeholder="Ваш логин">
         </div>
         <div class="field-group">
           <label>Пароль</label>
-          <input id="login-pass" type="password" placeholder="Пароль" autocomplete="current-password">
+          <input id="login-pass" type="password" placeholder="Пароль">
         </div>
         <button onclick="doLogin()">Войти</button>
       </div>
@@ -125,47 +158,11 @@
   <div id="modal-overlay">
     <div class="modal">
       <h3>Выберите имя пользователя</h3>
-      <p>Люди смогут найти вас по этому имени. Можно изменить позже в настройках.</p>
+      <p>Люди смогут найти вас по этому имени.</p>
       <input id="modal-username" placeholder="username" oninput="previewModalUsername()">
       <div class="hint" id="username-preview"></div>
       <div class="error" id="username-error"></div>
       <button onclick="saveUsername()">Продолжить</button>
-    </div>
-  </div>
-
-  <div id="settings-panel">
-    <div class="settings-box">
-      <h3>Настройки</h3>
-
-      <div class="settings-section warning" id="temp-account-section">
-        <h4>⚠ Временный аккаунт</h4>
-        <p>Ваш номер телефона не подтверждён. Если вы не подтвердите номер в течение 30 дней, ваш аккаунт будет удалён.</p>
-        <p style="color:#e74c3c;">Приносим свои извинения за неудобства. На данный момент у нас стоят лимиты по отправке SMS в день. Если у вас не получится зарегистрироваться сегодня — попробуйте завтра.</p>
-        <p id="temp-deadline" style="color:#5eb5f7;"></p>
-        <button class="save-btn" onclick="openPhoneVerify()" style="background:#e74c3c; width:100%;">Подтвердить номер телефона</button>
-      </div>
-
-      <div class="settings-section" id="verified-section" style="display:none;">
-        <h4>✓ Номер подтверждён</h4>
-        <p id="verified-phone"></p>
-      </div>
-
-      <div class="settings-section">
-        <h4>Имя пользователя</h4>
-        <input id="set-username" placeholder="username">
-        <div id="set-username-current" style="font-size:11px; color:#5eb5f7; margin-top:2px;"></div>
-        <div class="error-text" id="set-username-error"></div>
-        <button class="save-btn" onclick="changeUsername()">Изменить</button>
-      </div>
-
-      <div class="settings-section">
-        <h4>Пароль</h4>
-        <input id="set-password" type="password" placeholder="Новый пароль (мин 6 символов)">
-        <div class="error-text" id="set-password-error"></div>
-        <button class="save-btn" onclick="changePassword()">Изменить пароль</button>
-      </div>
-
-      <button class="settings-close" onclick="closeSettings()">Закрыть</button>
     </div>
   </div>
 
@@ -191,20 +188,93 @@
     </div>
   </div>
 
-  <div id="unverified-toast"></div>
+  <div id="menu-overlay" onclick="closeMenu()"></div>
+  <div id="menu-panel">
+    <div class="menu-header">
+      <div class="avatar" id="menu-avatar"></div>
+      <div class="menu-header-info">
+        <h3 id="menu-username"></h3>
+        <p id="menu-login"></p>
+      </div>
+      <button class="menu-close" onclick="closeMenu()">✕</button>
+    </div>
+    <div class="menu-nav" id="menu-nav">
+      <div class="menu-nav-item active" onclick="switchMenuView('profile', this)">
+        <span class="icon">👤</span> Мой профиль
+      </div>
+      <div class="menu-nav-item" onclick="switchMenuView('favorites', this)">
+        <span class="icon">⭐</span> Избранное
+      </div>
+      <div class="menu-nav-item" onclick="switchMenuView('settings', this)">
+        <span class="icon">⚙️</span> Настройки
+      </div>
+    </div>
+    <div class="menu-content active" id="menu-view-profile">
+      <div class="menu-content-inner">
+        <div class="avatar large" id="profile-avatar"></div>
+        <div class="info-row"><span class="label">Логин</span><span class="value" id="profile-login"></span></div>
+        <div class="info-row"><span class="label">Имя пользователя</span><span class="value" id="profile-username"></span></div>
+        <div class="info-row"><span class="label">Телефон</span><span class="value" id="profile-phone"></span></div>
+        <div class="info-row"><span class="label">Статус</span><span class="value" id="profile-status"></span></div>
+        <div class="info-row"><span class="label">Дата регистрации</span><span class="value" id="profile-created"></span></div>
+      </div>
+    </div>
+    <div class="menu-content" id="menu-view-favorites">
+      <div class="menu-content-inner">
+        <h2>⭐ Избранные сообщения</h2>
+        <div id="favorites-list"></div>
+      </div>
+    </div>
+    <div class="menu-content" id="menu-view-settings">
+      <div class="menu-content-inner">
+        <h2>Настройки</h2>
+
+        <div class="edit-section" id="temp-section">
+          <label style="color:#e74c3c; font-weight:bold;">⚠ Временный аккаунт</label>
+          <p style="font-size:12px; color:#8899a6; margin:5px 0 10px;">Подтвердите номер в течение 30 дней, иначе аккаунт будет удалён.</p>
+          <p style="font-size:12px; color:#e74c3c; margin:0 0 5px;">Лимиты SMS — если не получилось сегодня, попробуйте завтра.</p>
+          <p style="font-size:12px; color:#5eb5f7; margin:0 0 10px;" id="settings-deadline"></p>
+          <button class="save-btn" onclick="openPhoneVerify(); closeMenu();" style="background:#e74c3c;">Подтвердить номер</button>
+        </div>
+
+        <div class="edit-section">
+          <label>Имя пользователя</label>
+          <input id="set-username" placeholder="username">
+          <div id="set-username-info" style="font-size:11px; color:#5eb5f7; margin-top:2px;"></div>
+          <div class="error-text" id="set-username-error"></div>
+          <button class="save-btn" onclick="changeUsername()">Изменить</button>
+        </div>
+
+        <div class="edit-section">
+          <label>Пароль</label>
+          <input id="set-password" type="password" placeholder="Новый пароль (мин 6 символов)">
+          <div class="error-text" id="set-password-error"></div>
+          <button class="save-btn" onclick="changePassword()">Изменить пароль</button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-footer">
+      <button onclick="logout()">Выйти из аккаунта</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
 
   <div id="sidebar">
     <div id="sidebar-header">
+      <button class="menu-btn" onclick="openMenu()">☰</button>
       <div class="avatar" id="user-avatar"></div>
       <span id="user-name"></span>
-      <button class="settings-btn" onclick="openSettings()" title="Настройки">⚙</button>
-      <button onclick="logout()" style="margin-left:auto; background:#242f3d; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Выход</button>
     </div>
     <div id="search">
       <input placeholder="Поиск по @username или телефону..." oninput="searchUsers(this.value)">
       <div id="search-results"></div>
     </div>
     <div id="chat-list">
+      <div class="list-item" onclick="openFavorites()" data-chat="favorites">
+        <div class="avatar" style="background:#f39c12;">★</div>
+        <div>Избранное</div>
+      </div>
       <div class="list-item active" onclick="openGeneralChat()">
         <div class="avatar">O</div>
         <div>Общий чат</div>
@@ -213,8 +283,9 @@
   </div>
 
   <div id="main">
-    <div class="warning-banner" id="unverified-banner">⚠ Ваш аккаунт не подтверждён. Подтвердите номер в настройках.</div>
+    <div class="warning-banner" id="unverified-banner">⚠ Аккаунт не подтверждён. Подтвердите номер в настройках.</div>
     <div id="chat-header">
+      <button class="menu-btn" onclick="openMenu()">☰</button>
       <div class="avatar"></div>
       <span id="chat-title">Общий чат</span>
     </div>
@@ -241,64 +312,13 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    function dbWrite(path, data) {
-      return new Promise((resolve, reject) => {
-        const url = firebaseConfig.databaseURL + '/' + path + '.json';
-        fetch(url + '?auth=' + encodeURIComponent(auth.currentUser.accessToken), {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        }).then(r => r.json()).then(resolve).catch(reject);
-      });
-    }
-
-    function dbSet(path, data) {
-      return new Promise((resolve, reject) => {
-        const url = firebaseConfig.databaseURL + '/' + path + '.json';
-        fetch(url, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        }).then(r => r.json()).then(resolve).catch(reject);
-      });
-    }
-
-    function dbGet(path) {
-      return new Promise((resolve, reject) => {
-        const url = firebaseConfig.databaseURL + '/' + path + '.json';
-        fetch(url).then(r => r.json()).then(resolve).catch(reject);
-      });
-    }
-
-    function dbPush(path, data) {
-      return new Promise((resolve, reject) => {
-        const url = firebaseConfig.databaseURL + '/' + path + '.json';
-        fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        }).then(r => r.json()).then(resolve).catch(reject);
-      });
-    }
-
-    function dbOn(path, callback) {
-      const ref = db.ref(path);
-      ref.on('value', snap => {
-        callback(snap.val());
-      });
-      return ref;
-    }
-
-    function dbOff(path) {
-      db.ref(path).off();
-    }
-
     const authDiv = document.getElementById('auth');
     const modalOverlay = document.getElementById('modal-overlay');
-    const settingsPanel = document.getElementById('settings-panel');
     const phoneModalOverlay = document.getElementById('phone-modal-overlay');
     const phoneStepPhone = document.getElementById('phone-step-phone');
     const phoneStepCode = document.getElementById('phone-step-code');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const menuPanel = document.getElementById('menu-panel');
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main');
     const userName = document.getElementById('user-name');
@@ -308,17 +328,17 @@
     const searchResults = document.getElementById('search-results');
     const chatTitle = document.getElementById('chat-title');
     const unverifiedBanner = document.getElementById('unverified-banner');
-    const unverifiedToast = document.getElementById('unverified-toast');
+    const toast = document.getElementById('toast');
 
     let currentUser = null;
     let currentUserData = null;
     let currentChatId = 'general';
     let currentChatType = 'general';
     let pendingRegUser = null;
-    let pendingLoginData = null;
     let phoneConfirmResult = null;
     let phoneResendInterval = null;
     let phoneVerifyUid = null;
+    let favoritesData = {};
 
     function showAuthTab(tab, btn) {
       document.querySelectorAll('.auth-form .tab button').forEach(b => b.classList.remove('active'));
@@ -343,49 +363,90 @@
       return phone.replace(/[^0-9+]/g, '');
     }
 
+    function showToast(msg, type) {
+      toast.textContent = msg;
+      toast.className = 'active';
+      if (type) toast.classList.add(type);
+      setTimeout(() => toast.className = '', 4000);
+    }
+
+    /* Menu */
+    function openMenu() {
+      updateMenuProfile();
+      menuOverlay.classList.add('active');
+      menuPanel.classList.add('active');
+    }
+
+    function closeMenu() {
+      menuOverlay.classList.remove('active');
+      menuPanel.classList.remove('active');
+    }
+
+    function switchMenuView(view, el) {
+      document.querySelectorAll('.menu-nav-item').forEach(n => n.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.querySelectorAll('.menu-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('menu-view-' + view).classList.add('active');
+      if (view === 'favorites') loadFavorites();
+      if (view === 'settings') updateSettingsView();
+    }
+
+    function updateMenuProfile() {
+      const d = currentUserData || {};
+      document.getElementById('menu-avatar').textContent = getInitial(d);
+      document.getElementById('menu-username').textContent = getDisplayName(d);
+      document.getElementById('menu-login').textContent = d.login || '';
+
+      document.getElementById('profile-avatar').textContent = getInitial(d);
+      document.getElementById('profile-login').textContent = d.login || '—';
+      document.getElementById('profile-username').textContent = d.username ? '@' + d.username : 'Не установлено';
+      document.getElementById('profile-phone').textContent = d.phone || 'Не подтверждён';
+      document.getElementById('profile-status').textContent = d.phoneVerified ? '✓ Подтверждён' : '⚠ Временный';
+      document.getElementById('profile-created').textContent = d.createdAt ? new Date(d.createdAt).toLocaleDateString('ru-RU') : '—';
+    }
+
+    function updateSettingsView() {
+      const d = currentUserData || {};
+      const isVerified = d.phoneVerified === true;
+      document.getElementById('temp-section').style.display = isVerified ? 'none' : 'block';
+      document.getElementById('set-username').value = d.username || '';
+      document.getElementById('set-username-info').textContent = d.username ? 'Текущий: @' + d.username : 'Имя не установлено';
+      document.getElementById('set-username-error').textContent = '';
+      document.getElementById('set-password').value = '';
+      document.getElementById('set-password-error').textContent = '';
+
+      if (!isVerified && d.createdAt) {
+        const deadline = new Date(new Date(d.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000);
+        document.getElementById('settings-deadline').textContent = 'Удаление после: ' + deadline.toLocaleDateString('ru-RU');
+      }
+    }
+
     async function doRegister() {
       const login = document.getElementById('reg-login').value.trim().toLowerCase();
       const pass = document.getElementById('reg-pass').value;
-
-      if (!login || !pass) { alert('Заполните все поля'); return; }
-      if (!/^[a-z0-9_]{3,20}$/.test(login)) { alert('Логин: 3-20 символов, латиница, цифры, _'); return; }
-      if (pass.length < 6) { alert('Пароль минимум 6 символов'); return; }
+      if (!login || !pass) { showToast('Заполните все поля', 'warning'); return; }
+      if (!/^[a-z0-9_]{3,20}$/.test(login)) { showToast('Логин: 3-20 символов, латиница, цифры, _', 'warning'); return; }
+      if (pass.length < 6) { showToast('Пароль минимум 6 символов', 'warning'); return; }
 
       const fakeEmail = login + '@pulse-messenger.com';
-
       try {
         const existing = await db.ref('loginIndex/' + login).once('value');
-        if (existing.exists()) { alert('Этот логин уже занят'); return; }
-
-        try {
-          const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
-          const user = cred.user;
-          await writeUserToDb(user, login);
-          showUsernameModal(user);
-        } catch (e) {
-          if (e.code === 'auth/email-already-in-use') {
-            alert('Этот логин уже зарегистрирован. Войдите через «Вход».');
-          } else {
-            alert('Ошибка: ' + e.message);
-          }
-        }
+        if (existing.exists()) { showToast('Логин уже занят', 'warning'); return; }
+        const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
+        const user = cred.user;
+        await writeUserToDb(user, login);
+        showUsernameModal(user);
       } catch (e) {
-        alert('Ошибка проверки: ' + e.message);
+        if (e.code === 'auth/email-already-in-use') { showToast('Логин уже зарегистрирован. Войдите.', 'warning'); }
+        else { showToast('Ошибка: ' + e.message, 'warning'); }
       }
     }
 
     function writeUserToDb(user, login) {
       return new Promise((resolve, reject) => {
-        db.ref('users/' + user.uid).set({
-          login: login,
-          uid: user.uid,
-          createdAt: new Date().toISOString(),
-          phoneVerified: false
-        }, (err1) => {
-          if (err1) { reject(err1); return; }
-          db.ref('loginIndex/' + login).set(user.uid, (err2) => {
-            if (err2) reject(err2); else resolve();
-          });
+        db.ref('users/' + user.uid).set({ login, uid: user.uid, createdAt: new Date().toISOString(), phoneVerified: false }, e1 => {
+          if (e1) { reject(e1); return; }
+          db.ref('loginIndex/' + login).set(user.uid, e2 => { if (e2) reject(e2); else resolve(); });
         });
       });
     }
@@ -402,158 +463,92 @@
     function previewModalUsername() {
       const raw = document.getElementById('modal-username').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
       document.getElementById('modal-username').value = raw;
-      if (raw.length >= 3) {
-        document.getElementById('username-preview').textContent = '@' + raw;
-      } else {
-        document.getElementById('username-preview').textContent = '';
-      }
+      document.getElementById('username-preview').textContent = raw.length >= 3 ? '@' + raw : '';
     }
 
     async function saveUsername() {
       const username = document.getElementById('modal-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-
-      if (username.length < 3) {
-        document.getElementById('username-error').textContent = 'Минимум 3 символа (латиница, цифры, _)';
-        return;
-      }
-      if (username.length > 20) {
-        document.getElementById('username-error').textContent = 'Максимум 20 символов';
-        return;
-      }
+      if (username.length < 3) { document.getElementById('username-error').textContent = 'Минимум 3 символа'; return; }
+      if (username.length > 20) { document.getElementById('username-error').textContent = 'Максимум 20 символов'; return; }
 
       const user = auth.currentUser || pendingRegUser;
-      if (!user || !user.uid) { alert('Ошибка авторизации'); return; }
+      if (!user || !user.uid) { showToast('Ошибка авторизации', 'warning'); return; }
 
       try {
-        await user.getIdToken(true);
         const snap = await db.ref('usernameIndex/' + username).once('value');
-        if (snap.exists()) {
-          document.getElementById('username-error').textContent = 'Это имя уже занято';
-          return;
-        }
-
+        if (snap.exists()) { document.getElementById('username-error').textContent = 'Имя занято'; return; }
         await new Promise((resolve, reject) => {
           db.ref('users/' + user.uid + '/username').set(username, e1 => {
             if (e1) { reject(e1); return; }
-            db.ref('usernameIndex/' + username).set(user.uid, e2 => {
-              if (e2) reject(e2); else resolve();
-            });
+            db.ref('usernameIndex/' + username).set(user.uid, e2 => { if (e2) reject(e2); else resolve(); });
           });
         });
-
         modalOverlay.classList.remove('active');
         pendingRegUser = null;
-      } catch (e) {
-        alert('Ошибка: ' + e.message);
-      }
+      } catch (e) { showToast('Ошибка: ' + e.message, 'warning'); }
     }
 
     async function doLogin() {
       const login = document.getElementById('login-username').value.trim().toLowerCase();
       const pass = document.getElementById('login-pass').value;
-
-      if (!login || !pass) { alert('Заполните все поля'); return; }
-
+      if (!login || !pass) { showToast('Заполните все поля', 'warning'); return; }
       try {
         const snap = await db.ref('loginIndex/' + login).once('value');
-        if (!snap.exists()) { alert('Пользователь не найден'); return; }
-
+        if (!snap.exists()) { showToast('Пользователь не найден', 'warning'); return; }
         const uid = snap.val();
         const userData = await db.ref('users/' + uid).once('value');
-        if (!userData.exists()) { alert('Ошибка профиля'); return; }
-
-        const email = userData.val().login + '@pulse-messenger.com';
-        pendingLoginData = { uid, login, userData: userData.val() };
-
-        await auth.signInWithEmailAndPassword(email, pass);
-      } catch (e) {
-        alert('Ошибка: ' + e.message);
-      }
+        if (!userData.exists()) { showToast('Ошибка профиля', 'warning'); return; }
+        await auth.signInWithEmailAndPassword(userData.val().login + '@pulse-messenger.com', pass);
+      } catch (e) { showToast('Ошибка: ' + e.message, 'warning'); }
     }
 
     async function searchUsers(query) {
-      if (!query || query.length < 2) {
-        searchResults.style.display = 'none';
-        searchResults.innerHTML = '';
-        return;
-      }
-
+      if (!query || query.length < 2) { searchResults.style.display = 'none'; searchResults.innerHTML = ''; return; }
       const q = query.trim().toLowerCase().replace('@', '');
       const results = [];
-
       try {
         if (/^[a-z0-9_]/.test(q)) {
-          const allUsernames = await db.ref('usernameIndex').once('value');
-          if (allUsernames.exists()) {
+          const all = await db.ref('usernameIndex').once('value');
+          if (all.exists()) {
             const promises = [];
-            allUsernames.forEach(child => {
-              if (child.key.startsWith(q)) {
-                const uid = child.val();
-                if (uid !== (currentUser && currentUser.uid)) {
-                  promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? { ...s.val(), _uid: uid } : null));
-                }
+            all.forEach(child => {
+              if (child.key.startsWith(q) && child.val() !== (currentUser && currentUser.uid)) {
+                promises.push(db.ref('users/' + child.val()).once('value').then(s => s.exists() ? { ...s.val(), _uid: child.val() } : null));
               }
             });
-            const users = await Promise.all(promises);
-            users.filter(Boolean).forEach(u => results.push(u));
+            (await Promise.all(promises)).filter(Boolean).forEach(u => results.push(u));
           }
         }
-
         const normQ = normalizePhone(q);
         if (/^[0-9]/.test(normQ) && normQ.length >= 4) {
-          const allPhones = await db.ref('phoneIndex').once('value');
-          if (allPhones.exists()) {
+          const all = await db.ref('phoneIndex').once('value');
+          if (all.exists()) {
             const promises = [];
-            allPhones.forEach(child => {
-              if (child.key.includes(normQ)) {
-                const uid = child.val();
-                if (uid !== (currentUser && currentUser.uid)) {
-                  promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? { ...s.val(), _uid: uid } : null));
-                }
+            all.forEach(child => {
+              if (child.key.includes(normQ) && child.val() !== (currentUser && currentUser.uid)) {
+                promises.push(db.ref('users/' + child.val()).once('value').then(s => s.exists() ? { ...s.val(), _uid: child.val() } : null));
               }
             });
-            const users = await Promise.all(promises);
-            users.filter(Boolean).forEach(u => {
-              if (!results.find(r => r._uid === u._uid)) results.push(u);
-            });
+            (await Promise.all(promises)).filter(Boolean).forEach(u => { if (!results.find(r => r._uid === u._uid)) results.push(u); });
           }
         }
-
         renderSearchResults(results);
-      } catch (e) {
-        console.error('Search error:', e);
-      }
+      } catch (e) { console.error(e); }
     }
 
     function renderSearchResults(results) {
-      if (results.length === 0) {
-        searchResults.style.display = 'none';
-        searchResults.innerHTML = '';
-        return;
-      }
-
-      searchResults.style.display = 'block';
+      searchResults.style.display = results.length ? 'block' : 'none';
       searchResults.innerHTML = '';
-
       results.forEach(u => {
         const div = document.createElement('div');
         div.className = 'list-item';
-        const displayName = u.username ? '@' + u.username : u.login;
-        const initial = getInitial(u);
-        let extra = '';
-        if (u.phone) extra = `<div style="font-size:11px;color:#8899a6">${u.phone}</div>`;
-        div.innerHTML = `<div class="avatar">${initial}</div><div><div>${displayName}</div>${extra}</div>`;
-        div.onclick = () => {
-          openPrivateChat(u._uid, displayName, u.phoneVerified === true);
-          searchResults.style.display = 'none';
-          searchResults.innerHTML = '';
-          document.querySelector('#search input').value = '';
-        };
+        div.innerHTML = `<div class="avatar">${getInitial(u)}</div><div>${u.username ? '@' + u.username : u.login}</div>`;
+        div.onclick = () => { openPrivateChat(u._uid, u.username ? '@' + u.username : u.login); searchResults.style.display = 'none'; searchResults.innerHTML = ''; document.querySelector('#search input').value = ''; };
         searchResults.appendChild(div);
       });
     }
 
-    function openPrivateChat(uid, displayName, isVerified) {
+    function openPrivateChat(uid, displayName) {
       const ids = [currentUser.uid, uid].sort();
       const chatId = ids.join('_');
       currentChatId = chatId;
@@ -561,21 +556,18 @@
       chatTitle.textContent = displayName;
       messages.innerHTML = '';
       loadMessages();
-
       const existing = document.querySelector(`#chat-list[data-uid="${uid}"]`);
       if (!existing) {
         const div = document.createElement('div');
         div.className = 'list-item';
         div.setAttribute('data-uid', uid);
-        const initial = displayName[0].toUpperCase();
-        div.innerHTML = `<div class="avatar">${initial}</div><div>${displayName}</div>`;
-        div.onclick = () => openPrivateChat(uid, displayName, isVerified);
+        div.innerHTML = `<div class="avatar">${displayName[0].toUpperCase()}</div><div>${displayName}</div>`;
+        div.onclick = () => openPrivateChat(uid, displayName);
         chatList.appendChild(div);
       }
-
       document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
-      const target = document.querySelector(`#chat-list[data-uid="${uid}"]`);
-      if (target) target.classList.add('active');
+      const t = document.querySelector(`#chat-list[data-uid="${uid}"]`);
+      if (t) t.classList.add('active');
     }
 
     function openGeneralChat() {
@@ -585,83 +577,69 @@
       messages.innerHTML = '';
       loadMessages();
       document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
-      chatList.querySelector('.list-item').classList.add('active');
+      chatList.querySelector('[onclick="openGeneralChat()"]').classList.add('active');
     }
 
-    function openSettings() {
-      document.getElementById('set-username').value = currentUserData && currentUserData.username ? currentUserData.username : '';
-      document.getElementById('set-username-current').textContent = currentUserData && currentUserData.username ? 'Текущий: @' + currentUserData.username : 'Имя не установлено';
-      document.getElementById('set-username-error').textContent = '';
-      document.getElementById('set-password').value = '';
-      document.getElementById('set-password-error').textContent = '';
+    function openFavorites() {
+      currentChatId = 'favorites';
+      currentChatType = 'favorites';
+      chatTitle.textContent = '⭐ Избранное';
+      messages.innerHTML = '';
+      document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
+      chatList.querySelector('[data-chat="favorites"]').classList.add('active');
+      loadFavorites();
+    }
 
-      const isVerified = currentUserData && currentUserData.phoneVerified === true;
-      document.getElementById('temp-account-section').style.display = isVerified ? 'none' : 'block';
-      document.getElementById('verified-section').style.display = isVerified ? 'block' : 'none';
+    async function loadFavorites() {
+      if (!currentUser) return;
+      const snap = await db.ref('favorites/' + currentUser.uid).once('value');
+      favoritesData = snap.exists() ? snap.val() : {};
+      const list = document.getElementById('favorites-list');
+      list.innerHTML = '';
+      const keys = Object.keys(favoritesData).sort((a, b) => (favoritesData[b].savedAt || 0) - (favoritesData[a].savedAt || 0));
+      if (keys.length === 0) { list.innerHTML = '<div style="text-align:center; color:#8899a6; padding:30px;">Нет избранных сообщений.<br>Нажмите ★ на сообщении чтобы добавить.</div>'; return; }
+      keys.forEach(key => {
+        const item = favoritesData[key];
+        const div = document.createElement('div');
+        div.className = 'fav-item';
+        const date = item.savedAt ? new Date(item.savedAt).toLocaleString('ru-RU') : '';
+        div.innerHTML = `<button class="remove-fav" onclick="event.stopPropagation(); removeFavorite('${key}')">✕</button><div class="fav-text">${item.text}</div><div class="fav-meta">${item.from || ''} · ${item.time || ''} · ${date}</div>`;
+        list.appendChild(div);
+      });
+    }
 
-      if (isVerified) {
-        document.getElementById('verified-phone').textContent = 'Телефон: ' + currentUserData.phone;
+    async function toggleFavorite(msgId, msgData) {
+      if (!currentUser) return;
+      if (favoritesData[msgId]) {
+        await db.ref('favorites/' + currentUser.uid + '/' + msgId).remove();
+        delete favoritesData[msgId];
+        showToast('Убрано из избранного', '');
       } else {
-        const created = currentUserData && currentUserData.createdAt ? new Date(currentUserData.createdAt) : new Date();
-        const deadline = new Date(created.getTime() + 30 * 24 * 60 * 60 * 1000);
-        document.getElementById('temp-deadline').textContent = 'Аккаунт будет удалён после: ' + deadline.toLocaleDateString('ru-RU');
+        await db.ref('favorites/' + currentUser.uid + '/' + msgId).set({
+          text: msgData.text,
+          from: msgData.user,
+          time: msgData.time,
+          savedAt: Date.now()
+        });
+        favoritesData[msgId] = { text: msgData.text, from: msgData.user, time: msgData.time, savedAt: Date.now() };
+        showToast('Добавлено в избранное ⭐', 'success');
       }
-
-      settingsPanel.classList.add('active');
+      updateFavoriteButtons();
     }
 
-    function closeSettings() {
-      settingsPanel.classList.remove('active');
+    async function removeFavorite(msgId) {
+      if (!currentUser) return;
+      await db.ref('favorites/' + currentUser.uid + '/' + msgId).remove();
+      delete favoritesData[msgId];
+      loadFavorites();
     }
 
-    async function changeUsername() {
-      const newUsername = document.getElementById('set-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-      const errEl = document.getElementById('set-username-error');
-      errEl.textContent = '';
-      errEl.className = 'error-text';
-
-      if (newUsername.length < 3) { errEl.textContent = 'Минимум 3 символа'; return; }
-      if (newUsername.length > 20) { errEl.textContent = 'Максимум 20 символов'; return; }
-      if (currentUserData && currentUserData.username === newUsername) { errEl.textContent = 'Такое имя уже у вас'; return; }
-
-      try {
-        const check = await db.ref('usernameIndex/' + newUsername).once('value');
-        if (check.exists()) { errEl.textContent = 'Это имя уже занято'; return; }
-
-        const uid = currentUser.uid;
-        if (currentUserData && currentUserData.username) {
-          await db.ref('usernameIndex/' + currentUserData.username).remove();
-        }
-        await db.ref('users/' + uid + '/username').set(newUsername);
-        await db.ref('usernameIndex/' + newUsername).set(uid);
-
-        currentUserData.username = newUsername;
-        userName.textContent = '@' + newUsername;
-        userAvatar.textContent = newUsername[0].toUpperCase();
-        document.getElementById('set-username-current').textContent = 'Текущий: @' + newUsername;
-        errEl.textContent = 'Имя изменено!';
-        errEl.className = 'success-text';
-      } catch (e) {
-        errEl.textContent = 'Ошибка: ' + e.message;
-      }
-    }
-
-    async function changePassword() {
-      const newPass = document.getElementById('set-password').value;
-      const errEl = document.getElementById('set-password-error');
-      errEl.textContent = '';
-      errEl.className = 'error-text';
-
-      if (newPass.length < 6) { errEl.textContent = 'Минимум 6 символов'; return; }
-
-      try {
-        await currentUser.updatePassword(newPass);
-        errEl.textContent = 'Пароль изменён!';
-        errEl.className = 'success-text';
-        document.getElementById('set-password').value = '';
-      } catch (e) {
-        errEl.textContent = 'Ошибка: ' + e.message;
-      }
+    function updateFavoriteButtons() {
+      document.querySelectorAll('.msg .fav-btn').forEach(btn => {
+        const msgId = btn.getAttribute('data-msg-id');
+        if (favoritesData[msgId]) { btn.classList.add('favorited'); btn.textContent = '★'; }
+        else { btn.classList.remove('favorited'); btn.textContent = '☆'; }
+      });
     }
 
     function openPhoneVerify() {
@@ -671,37 +649,20 @@
       phoneStepCode.style.display = 'none';
       document.getElementById('phone-input').value = '';
       document.getElementById('phone-error').textContent = '';
-      document.getElementById('phone-code-input').value = '';
-      document.getElementById('phone-code-error').textContent = '';
       clearPhoneResendTimer();
     }
 
-    function closePhoneModal() {
-      phoneModalOverlay.classList.remove('active');
-      clearPhoneResendTimer();
-    }
-
-    function backToPhoneStep() {
-      phoneStepPhone.style.display = 'block';
-      phoneStepCode.style.display = 'none';
-      clearPhoneResendTimer();
-    }
+    function closePhoneModal() { phoneModalOverlay.classList.remove('active'); clearPhoneResendTimer(); }
+    function backToPhoneStep() { phoneStepPhone.style.display = 'block'; phoneStepCode.style.display = 'none'; clearPhoneResendTimer(); }
 
     async function sendPhoneCode() {
       const phone = document.getElementById('phone-input').value.trim();
-      const errEl = document.getElementById('phone-error');
-
-      if (!phone || phone.length < 10) { errEl.textContent = 'Введите корректный номер'; return; }
-
+      if (!phone || phone.length < 10) { document.getElementById('phone-error').textContent = 'Введите корректный номер'; return; }
       const normalized = normalizePhone(phone);
       try {
         const existing = await db.ref('phoneIndex/' + normalized).once('value');
-        if (existing.exists()) { errEl.textContent = 'Этот номер уже привязан к другому аккаунту'; return; }
-      } catch (e) {
-        errEl.textContent = 'Ошибка проверки номера';
-        return;
-      }
-
+        if (existing.exists()) { document.getElementById('phone-error').textContent = 'Номер уже привязан'; return; }
+      } catch (e) { document.getElementById('phone-error').textContent = 'Ошибка проверки'; return; }
       try {
         const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container-phone', { size: 'invisible' });
         phoneConfirmResult = await auth.signInWithPhoneNumber(phone, appVerifier);
@@ -709,67 +670,34 @@
         phoneStepPhone.style.display = 'none';
         phoneStepCode.style.display = 'block';
         startPhoneResendTimer(phone);
-      } catch (e) {
-        errEl.textContent = 'Ошибка: ' + e.message;
-      }
+      } catch (e) { document.getElementById('phone-error').textContent = 'Ошибка: ' + e.message; }
     }
 
     async function verifyPhoneCode() {
       const code = document.getElementById('phone-code-input').value.trim();
-      if (!code || code.length < 4) {
-        document.getElementById('phone-code-error').textContent = 'Введите код из SMS';
-        return;
-      }
-
+      if (!code || code.length < 4) { document.getElementById('phone-code-error').textContent = 'Введите код'; return; }
       try {
         const result = await phoneConfirmResult.confirm(code);
-        const user = result.user;
-        const phone = user.phoneNumber;
+        const phone = result.user.phoneNumber;
         const normalized = normalizePhone(phone);
-
-        await db.ref('users/' + phoneVerifyUid).update({
-          phone: phone,
-          normalizedPhone: normalized,
-          phoneVerified: true,
-          phoneVerifiedAt: new Date().toISOString()
-        });
+        await db.ref('users/' + phoneVerifyUid).update({ phone, normalizedPhone: normalized, phoneVerified: true, phoneVerifiedAt: new Date().toISOString() });
         await db.ref('phoneIndex/' + normalized).set(phoneVerifyUid);
-
         await auth.signOut();
-
         phoneModalOverlay.classList.remove('active');
-        closePhoneModal();
-        alert('Номер подтверждён! Войдите снова.');
-      } catch (e) {
-        document.getElementById('phone-code-error').textContent = 'Неверный код';
-      }
+        showToast('Номер подтверждён! Войдите снова.', 'success');
+      } catch (e) { document.getElementById('phone-code-error').textContent = 'Неверный код'; }
     }
 
     function startPhoneResendTimer(phone) {
-      let seconds = 30;
+      let s = 30;
       const timerEl = document.getElementById('resend-timer');
       const resendBtn = document.getElementById('resend-phone-btn');
       resendBtn.style.display = 'none';
-      timerEl.textContent = 'Отправить повторно через ' + seconds + 'с';
+      timerEl.textContent = 'Повторно через ' + s + 'с';
       clearPhoneResendTimer();
-      phoneResendInterval = setInterval(() => {
-        seconds--;
-        if (seconds <= 0) {
-          clearPhoneResendTimer();
-          timerEl.textContent = '';
-          resendBtn.style.display = 'block';
-        } else {
-          timerEl.textContent = 'Отправить повторно через ' + seconds + 'с';
-        }
-      }, 1000);
+      phoneResendInterval = setInterval(() => { s--; if (s <= 0) { clearPhoneResendTimer(); timerEl.textContent = ''; resendBtn.style.display = 'block'; } else { timerEl.textContent = 'Повторно через ' + s + 'с'; } }, 1000);
     }
-
-    function clearPhoneResendTimer() {
-      if (phoneResendInterval) {
-        clearInterval(phoneResendInterval);
-        phoneResendInterval = null;
-      }
-    }
+    function clearPhoneResendTimer() { if (phoneResendInterval) { clearInterval(phoneResendInterval); phoneResendInterval = null; } }
 
     async function resendPhoneCode() {
       const phone = document.getElementById('phone-input').value.trim();
@@ -777,26 +705,49 @@
         const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container-phone', { size: 'invisible' });
         phoneConfirmResult = await auth.signInWithPhoneNumber(phone, appVerifier);
         startPhoneResendTimer(phone);
-      } catch (e) {
-        document.getElementById('phone-code-error').textContent = 'Ошибка: ' + e.message;
-      }
+      } catch (e) { document.getElementById('phone-code-error').textContent = 'Ошибка: ' + e.message; }
     }
 
-    function showToast(msg) {
-      unverifiedToast.textContent = msg;
-      unverifiedToast.classList.add('active');
-      setTimeout(() => unverifiedToast.classList.remove('active'), 5000);
+    async function changeUsername() {
+      const newUsername = document.getElementById('set-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const errEl = document.getElementById('set-username-error');
+      errEl.textContent = ''; errEl.className = 'error-text';
+      if (newUsername.length < 3) { errEl.textContent = 'Минимум 3 символа'; return; }
+      if (newUsername.length > 20) { errEl.textContent = 'Максимум 20 символов'; return; }
+      if (currentUserData && currentUserData.username === newUsername) { errEl.textContent = 'Такое имя уже у вас'; return; }
+      try {
+        const check = await db.ref('usernameIndex/' + newUsername).once('value');
+        if (check.exists()) { errEl.textContent = 'Имя занято'; return; }
+        if (currentUserData && currentUserData.username) await db.ref('usernameIndex/' + currentUserData.username).remove();
+        await db.ref('users/' + currentUser.uid + '/username').set(newUsername);
+        await db.ref('usernameIndex/' + newUsername).set(currentUser.uid);
+        currentUserData.username = newUsername;
+        userName.textContent = '@' + newUsername;
+        userAvatar.textContent = newUsername[0].toUpperCase();
+        updateMenuProfile();
+        document.getElementById('set-username-info').textContent = 'Текущий: @' + newUsername;
+        errEl.textContent = 'Изменено!'; errEl.className = 'success-text';
+      } catch (e) { errEl.textContent = 'Ошибка: ' + e.message; }
+    }
+
+    async function changePassword() {
+      const newPass = document.getElementById('set-password').value;
+      const errEl = document.getElementById('set-password-error');
+      errEl.textContent = ''; errEl.className = 'error-text';
+      if (newPass.length < 6) { errEl.textContent = 'Минимум 6 символов'; return; }
+      try {
+        await currentUser.updatePassword(newPass);
+        errEl.textContent = 'Пароль изменён!'; errEl.className = 'success-text';
+        document.getElementById('set-password').value = '';
+      } catch (e) { errEl.textContent = 'Ошибка: ' + e.message; }
     }
 
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentUser = user;
         const snap = await db.ref('users/' + user.uid).once('value');
-        if (snap.exists()) {
-          currentUserData = snap.val();
-        } else {
-          currentUserData = { login: '', uid: user.uid, phoneVerified: false, createdAt: new Date().toISOString() };
-        }
+        if (snap.exists()) currentUserData = snap.val();
+        else currentUserData = { login: '', uid: user.uid, phoneVerified: false, createdAt: new Date().toISOString() };
 
         if (!currentUserData.username) {
           auth.signOut();
@@ -811,43 +762,25 @@
         authDiv.style.display = 'none';
         sidebar.style.display = 'flex';
         main.style.display = 'flex';
-
         userName.textContent = getDisplayName(currentUserData);
         userAvatar.textContent = getInitial(currentUserData);
-
-        if (currentUserData.phoneVerified !== true) {
-          unverifiedBanner.classList.add('active');
-        } else {
-          unverifiedBanner.classList.remove('active');
-        }
-
+        unverifiedBanner.classList.toggle('active', currentUserData.phoneVerified !== true);
         loadMessages();
-      } else {
-        currentUser = null;
-        currentUserData = null;
-      }
+      } else { currentUser = null; currentUserData = null; }
     });
 
     function sendMsg() {
       const text = document.getElementById('msg-input').value;
       if (!text || !currentUser) return;
-
-      if (currentUserData.phoneVerified !== true) {
-        showToast('⚠ У вас не подтверждён номер телефона. Подтвердите в настройках.');
-      }
-
+      if (currentChatId === 'favorites') { showToast('Нельзя писать в избранное', 'warning'); return; }
+      if (currentUserData.phoneVerified !== true) showToast('⚠ Номер не подтверждён', 'warning');
       const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : currentUserData.login;
-      db.ref('messages/' + currentChatId).push({
-        user: displayName,
-        userId: currentUser.uid,
-        text: text,
-        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-        unverified: currentUserData.phoneVerified !== true
-      });
+      db.ref('messages/' + currentChatId).push({ user: displayName, userId: currentUser.uid, text, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), unverified: currentUserData.phoneVerified !== true });
       document.getElementById('msg-input').value = '';
     }
 
     function loadMessages() {
+      if (currentChatId === 'favorites') return;
       db.ref('messages/' + currentChatId).off();
       messages.innerHTML = '';
       db.ref('messages/' + currentChatId).on('child_added', snapshot => {
@@ -858,27 +791,25 @@
         if (isSelf) cls += ' self';
         if (!isSelf && msg.unverified) cls += ' unverified';
         div.className = cls;
-
+        const msgId = snapshot.key;
+        const isFav = favoritesData[msgId];
         let authorHtml = `<div class="author">${msg.user}</div>`;
-        if (!isSelf && msg.unverified) {
-          authorHtml += `<div style="font-size:10px; color:#e74c3c; margin-bottom:3px;">⚠ Номер не подтверждён</div>`;
-        }
-
-        div.innerHTML = `${authorHtml}${msg.text}<span class="time">${msg.time}</span>`;
+        if (!isSelf && msg.unverified) authorHtml += `<div style="font-size:10px; color:#e74c3c; margin-bottom:3px;">⚠ Номер не подтверждён</div>`;
+        div.innerHTML = `<div class="msg-actions"><button class="fav-btn ${isFav ? 'favorited' : ''}" data-msg-id="${msgId}" onclick="event.stopPropagation(); toggleFavorite('${msgId}', ${JSON.stringify(msg).replace(/'/g, "\\'")})">${isFav ? '★' : '☆'}</button></div>${authorHtml}${msg.text}<span class="time">${msg.time}</span>`;
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
-      }, e => console.error('Load messages error:', e));
+      });
+      db.ref('messages/' + currentChatId).once('value', () => { setTimeout(updateFavoriteButtons, 100); });
     }
 
     function logout() {
       auth.signOut().then(() => {
-        currentUser = null;
-        currentUserData = null;
-        sidebar.style.display = 'none';
-        main.style.display = 'none';
+        currentUser = null; currentUserData = null;
+        sidebar.style.display = 'none'; main.style.display = 'none';
         authDiv.style.display = 'flex';
         unverifiedBanner.classList.remove('active');
-        chatList.innerHTML = `<div class="list-item active" onclick="openGeneralChat()"><div class="avatar">O</div><div>Общий чат</div></div>`;
+        closeMenu();
+        chatList.innerHTML = `<div class="list-item" onclick="openFavorites()" data-chat="favorites"><div class="avatar" style="background:#f39c12;">★</div><div>Избранное</div></div><div class="list-item active" onclick="openGeneralChat()"><div class="avatar">O</div><div>Общий чат</div></div>`;
       });
     }
   </script>
