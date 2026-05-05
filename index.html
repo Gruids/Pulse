@@ -11,7 +11,7 @@
     body { font-family:'Segoe UI',sans-serif; background:#0e1621; color:#fff; height:100vh; display:flex; }
     #sidebar { width:300px; background:#17212b; display:none; flex-direction:column; }
     #sidebar-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
-    .avatar { width:40px; height:40px; border-radius:50%; background:#2b5278; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; }
+    .avatar { width:40px; height:40px; border-radius:50%; background:#2b5278; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; flex-shrink:0; }
     #search { padding:10px; }
     #search input { width:100%; padding:8px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
     #chat-list { flex:1; overflow-y:auto; }
@@ -24,7 +24,7 @@
     #main { flex:1; display:none; flex-direction:column; }
     #chat-header { padding:15px; background:#242f3d; display:flex; align-items:center; gap:10px; }
     #messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
-    .msg { max-width:60%; padding:8px 12px; border-radius:8px; background:#182633; }
+    .msg { max-width:60%; padding:8px 12px; border-radius:8px; background:#182633; word-wrap:break-word; }
     .msg.self { background:#2b5278; align-self:flex-end; }
     .msg .author { font-size:12px; color:#5eb5f7; margin-bottom:4px; }
     .msg .time { font-size:11px; color:#aaa; float:right; margin-left:10px; }
@@ -32,67 +32,115 @@
     #input-area input { flex:1; padding:10px; border:none; border-radius:5px; background:#242f3d; color:#fff; }
     #input-area button { padding:10px 20px; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
     #auth { position:fixed; inset:0; background:#0e1621; display:flex; justify-content:center; align-items:center; }
-    .auth-form { background:#17212b; padding:30px; border-radius:10px; width:340px; }
+    .auth-form { background:#17212b; padding:30px; border-radius:10px; width:360px; }
     .auth-form h2 { margin-bottom:15px; text-align:center; font-size:20px; }
-    .auth-form input { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:15px; text-align:center; }
+    .auth-form input { width:100%; padding:12px; margin:6px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:15px; }
     .auth-form button { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:15px; font-weight:bold; }
-    .auth-form button:disabled { opacity:0.5; cursor:not-allowed; }
     .auth-form .tab { display:flex; margin-bottom:15px; }
-    .auth-form .tab button { flex:1; margin:0; border-radius:8px 8px 0 0; background:#242f3d; font-size:14px; font-weight:bold; }
+    .auth-form .tab button { flex:1; margin:0; border-radius:8px 8px 0 0; background:#242f3d; font-size:14px; font-weight:bold; padding:10px; }
     .auth-form .tab button.active { background:#2b5278; }
-    .field-group { margin:8px 0; }
-    .field-group label { font-size:13px; color:#8899a6; display:block; margin-bottom:4px; }
-    .auth-step { display:none; }
-    .auth-step.active { display:block; }
-    .back-btn { background:none; border:none; color:#5eb5f7; cursor:pointer; font-size:13px; margin-bottom:10px; display:block; }
-    .back-btn:hover { color:#fff; }
-    #recaptcha-container { margin:10px auto; }
-    .timer { text-align:center; color:#8899a6; font-size:13px; margin:5px 0; }
+    .field-group { margin:6px 0; }
+    .field-group label { font-size:13px; color:#8899a6; display:block; margin-bottom:3px; }
+    .hint { font-size:12px; color:#5eb5f7; margin:4px 0 6px; }
+
+    /* Modal overlay */
+    #modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:1000; }
+    #modal-overlay.active { display:flex; }
+    .modal { background:#17212b; padding:30px; border-radius:12px; width:360px; text-align:center; }
+    .modal h3 { margin-bottom:10px; font-size:18px; }
+    .modal p { color:#8899a6; font-size:13px; margin-bottom:15px; }
+    .modal input { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:15px; }
+    .modal button { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:15px; font-weight:bold; }
+    .modal .error { color:#e74c3c; font-size:13px; margin-top:5px; min-height:18px; }
+
+    /* Settings panel */
+    #settings-panel { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:1000; }
+    #settings-panel.active { display:flex; }
+    .settings-box { background:#17212b; padding:30px; border-radius:12px; width:380px; max-height:80vh; overflow-y:auto; }
+    .settings-box h3 { margin-bottom:20px; font-size:18px; text-align:center; }
+    .settings-row { margin-bottom:15px; }
+    .settings-row label { font-size:13px; color:#8899a6; display:block; margin-bottom:4px; }
+    .settings-row input { width:100%; padding:10px; border:none; border-radius:6px; background:#242f3d; color:#fff; font-size:14px; }
+    .settings-row .save-btn { padding:8px 20px; border:none; border-radius:6px; background:#2b5278; color:#fff; cursor:pointer; font-size:13px; margin-top:5px; }
+    .settings-row .save-btn:hover { background:#3a6b8e; }
+    .settings-close { width:100%; padding:12px; margin-top:20px; border:none; border-radius:8px; background:#242f3d; color:#fff; cursor:pointer; font-size:14px; }
+    .settings-row .current-val { font-size:12px; color:#5eb5f7; margin-top:2px; }
+    .settings-row .error-text { color:#e74c3c; font-size:12px; margin-top:3px; }
+
+    /* Settings button in sidebar */
+    .settings-btn { background:none; border:none; color:#8899a6; cursor:pointer; font-size:18px; padding:5px; }
+    .settings-btn:hover { color:#fff; }
   </style>
 </head>
 <body>
   <div id="auth">
     <div class="auth-form">
-      <!-- Step 1: Choose login or register -->
-      <div id="step-choose" class="auth-step active">
-        <h2>Pulse</h2>
-        <div class="tab">
-          <button class="active" onclick="chooseTab('login', this)">Вход</button>
-          <button onclick="chooseTab('reg', this)">Регистрация</button>
-        </div>
-
-        <div id="choose-login">
-          <div class="field-group">
-            <label>Номер телефона</label>
-            <input id="login-phone" placeholder="+79001234567" type="tel">
-          </div>
-          <button onclick="sendLoginCode()">Получить код</button>
-        </div>
-
-        <div id="choose-reg" style="display:none">
-          <div class="field-group">
-            <label>Номер телефона</label>
-            <input id="reg-phone" placeholder="+79001234567" type="tel">
-          </div>
-          <div class="field-group">
-            <label>Имя пользователя</label>
-            <input id="reg-username" placeholder="username (латиница, цифры, _)">
-          </div>
-          <button onclick="sendRegCode()">Получить код</button>
-        </div>
+      <h2>Pulse</h2>
+      <div class="tab">
+        <button class="active" onclick="showAuthTab('login', this)">Вход</button>
+        <button onclick="showAuthTab('reg', this)">Регистрация</button>
       </div>
-
-      <!-- Step 2: Enter SMS code -->
-      <div id="step-code" class="auth-step">
-        <button class="back-btn" onclick="backToChoose()">← Назад</button>
-        <h2>Введите код из SMS</h2>
-        <p id="code-sent-to" style="text-align:center; color:#8899a6; margin-bottom:15px; font-size:14px;"></p>
-        <input id="sms-code" placeholder="000000" maxlength="6" type="tel">
-        <div class="timer" id="resend-timer"></div>
-        <button id="verify-btn" onclick="verifyCode()">Подтвердить</button>
-        <button onclick="resendCode()" id="resend-btn" style="display:none; background:#242f3d; font-weight:normal;">Отправить код повторно</button>
-        <div id="recaptcha-container"></div>
+      <div id="auth-login">
+        <div class="field-group">
+          <label>Email</label>
+          <input id="login-email" type="email" placeholder="your@email.com">
+        </div>
+        <div class="field-group">
+          <label>Пароль</label>
+          <input id="login-pass" type="password" placeholder="Пароль">
+        </div>
+        <button onclick="doLogin()">Войти</button>
       </div>
+      <div id="auth-reg" style="display:none">
+        <div class="field-group">
+          <label>Email</label>
+          <input id="reg-email" type="email" placeholder="your@email.com">
+        </div>
+        <div class="field-group">
+          <label>Пароль (минимум 6 символов)</label>
+          <input id="reg-pass" type="password" placeholder="Придумайте пароль">
+        </div>
+        <button onclick="doRegister()">Создать аккаунт</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-overlay">
+    <div class="modal">
+      <h3>Выберите имя пользователя</h3>
+      <p>Другие люди смогут найти вас по этому имени. Вы сможете изменить его позже в настройках.</p>
+      <div class="field-group">
+        <label style="text-align:left; display:block; color:#8899a6; font-size:13px; margin-bottom:4px;">Имя пользователя</label>
+        <input id="modal-username" placeholder="username" oninput="previewUsername()">
+        <div class="hint" id="username-preview"></div>
+      </div>
+      <div class="error" id="username-error"></div>
+      <button onclick="saveUsername()">Продолжить</button>
+    </div>
+  </div>
+
+  <div id="settings-panel">
+    <div class="settings-box">
+      <h3>Настройки</h3>
+      <div class="settings-row">
+        <label>Email</label>
+        <input id="set-email" disabled>
+        <div class="current-val">Нельзя изменить</div>
+      </div>
+      <div class="settings-row">
+        <label>Имя пользователя</label>
+        <input id="set-username" placeholder="username">
+        <div class="current-val" id="set-username-current"></div>
+        <div class="error-text" id="set-username-error"></div>
+        <button class="save-btn" onclick="changeUsername()">Изменить</button>
+      </div>
+      <div class="settings-row">
+        <label>Пароль</label>
+        <input id="set-password" type="password" placeholder="Новый пароль (мин 6 символов)">
+        <div class="error-text" id="set-password-error"></div>
+        <button class="save-btn" onclick="changePassword()">Изменить пароль</button>
+      </div>
+      <button class="settings-close" onclick="closeSettings()">Закрыть</button>
     </div>
   </div>
 
@@ -100,10 +148,11 @@
     <div id="sidebar-header">
       <div class="avatar" id="user-avatar"></div>
       <span id="user-name"></span>
+      <button class="settings-btn" onclick="openSettings()" title="Настройки">⚙</button>
       <button onclick="logout()" style="margin-left:auto; background:#242f3d; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Выход</button>
     </div>
     <div id="search">
-      <input placeholder="Поиск по имени или телефону..." oninput="searchUsers(this.value)">
+      <input placeholder="Поиск по @username..." oninput="searchUsers(this.value)">
       <div id="search-results"></div>
     </div>
     <div id="chat-list">
@@ -126,8 +175,6 @@
     </div>
   </div>
 
-  <div id="recaptcha-container"></div>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCyKQ5hrVFikcnL2Z_dnlHYt6G0ZgqZZoQ",
@@ -145,6 +192,8 @@
     const db = firebase.database();
 
     const authDiv = document.getElementById('auth');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const settingsPanel = document.getElementById('settings-panel');
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main');
     const userName = document.getElementById('user-name');
@@ -157,162 +206,102 @@
     let currentUser = null;
     let currentUserData = null;
     let currentChatId = 'general';
-    let currentChatType = 'general';
-    let confirmationResult = null;
-    let currentAuthMode = null;
-    let regData = null;
-    let resendTimerInterval = null;
+    let pendingRegUser = null;
 
-    function normalizePhone(phone) {
-      return phone.replace(/[^0-9+]/g, '');
-    }
-
-    function chooseTab(tab, btn) {
+    function showAuthTab(tab, btn) {
       document.querySelectorAll('.auth-form .tab button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('choose-login').style.display = tab === 'login' ? 'block' : 'none';
-      document.getElementById('choose-reg').style.display = tab === 'reg' ? 'block' : 'none';
+      document.getElementById('auth-login').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('auth-reg').style.display = tab === 'reg' ? 'block' : 'none';
     }
 
-    function showStep(step) {
-      document.querySelectorAll('.auth-step').forEach(s => s.classList.remove('active'));
-      document.getElementById('step-' + step).classList.add('active');
+    function getInitial(data) {
+      if (data && data.username) return data.username[0].toUpperCase();
+      if (data && data.email) return data.email[0].toUpperCase();
+      return '?';
     }
 
-    function backToChoose() {
-      showStep('choose');
-      clearResendTimer();
+    function getDisplayName(data) {
+      if (data && data.username) return '@' + data.username;
+      if (data && data.email) return data.email;
+      return 'Пользователь';
     }
 
-    function startResendTimer() {
-      let seconds = 30;
-      const timerEl = document.getElementById('resend-timer');
-      const resendBtn = document.getElementById('resend-btn');
-      resendBtn.style.display = 'none';
-      timerEl.textContent = 'Отправить повторно через ' + seconds + 'с';
-      clearResendTimer();
-      resendTimerInterval = setInterval(() => {
-        seconds--;
-        if (seconds <= 0) {
-          clearResendTimer();
-          timerEl.textContent = '';
-          resendBtn.style.display = 'block';
-        } else {
-          timerEl.textContent = 'Отправить повторно через ' + seconds + 'с';
-        }
-      }, 1000);
-    }
+    async function doRegister() {
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-pass').value;
 
-    function clearResendTimer() {
-      if (resendTimerInterval) {
-        clearInterval(resendTimerInterval);
-        resendTimerInterval = null;
+      if (!email || !pass) { alert('Заполните все поля'); return; }
+      if (pass.length < 6) { alert('Пароль минимум 6 символов'); return; }
+
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        pendingRegUser = cred.user;
+
+        await db.ref('users/' + cred.user.uid).set({
+          email: email,
+          uid: cred.user.uid,
+          createdAt: new Date().toISOString()
+        });
+
+        document.getElementById('modal-username').value = '';
+        document.getElementById('username-preview').textContent = '';
+        document.getElementById('username-error').textContent = '';
+        modalOverlay.classList.add('active');
+        document.getElementById('modal-username').focus();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
       }
     }
 
-    async function sendLoginCode() {
-      const phone = document.getElementById('login-phone').value.trim();
-      if (!phone || phone.length < 10) { alert('Введите корректный номер телефона'); return; }
+    function previewUsername() {
+      const raw = document.getElementById('modal-username').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
+      document.getElementById('modal-username').value = raw;
+      if (raw.length >= 3) {
+        document.getElementById('username-preview').textContent = '@' + raw;
+      } else {
+        document.getElementById('username-preview').textContent = '';
+      }
+    }
+
+    async function saveUsername() {
+      const username = document.getElementById('modal-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+      if (username.length < 3) {
+        document.getElementById('username-error').textContent = 'Минимум 3 символа (латиница, цифры, _)';
+        return;
+      }
+      if (username.length > 20) {
+        document.getElementById('username-error').textContent = 'Максимум 20 символов';
+        return;
+      }
 
       try {
-        const normalized = normalizePhone(phone);
-        const snap = await db.ref('phoneIndex/' + normalized).once('value');
-        if (!snap.exists()) {
-          alert('Этот номер не зарегистрирован. Сначала создайте аккаунт.');
+        const check = await db.ref('usernameIndex/' + username).once('value');
+        if (check.exists()) {
+          document.getElementById('username-error').textContent = 'Это имя уже занято';
           return;
         }
 
-        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          size: 'invisible'
-        });
+        const uid = pendingRegUser.uid;
+        await db.ref('users/' + uid + '/username').set(username);
+        await db.ref('usernameIndex/' + username).set(uid);
 
-        const result = await auth.signInWithPhoneNumber(phone, appVerifier);
-        confirmationResult = result;
-        currentAuthMode = 'login';
-        document.getElementById('code-sent-to').textContent = 'Код отправлен на ' + phone;
-        document.getElementById('sms-code').value = '';
-        showStep('code');
-        startResendTimer();
+        modalOverlay.classList.remove('active');
+        pendingRegUser = null;
       } catch (e) {
         alert('Ошибка: ' + e.message);
       }
     }
 
-    async function sendRegCode() {
-      const phone = document.getElementById('reg-phone').value.trim();
-      const username = document.getElementById('reg-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    async function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value;
 
-      if (!phone || phone.length < 10) { alert('Введите корректный номер телефона'); return; }
-      if (!username || username.length < 3) { alert('Имя пользователя — минимум 3 символа (латиница, цифры, _)'); return; }
-
-      try {
-        const normalized = normalizePhone(phone);
-        const phoneCheck = await db.ref('phoneIndex/' + normalized).once('value');
-        if (phoneCheck.exists()) { alert('Этот номер уже зарегистрирован'); return; }
-
-        const usernameCheck = await db.ref('usernameIndex/' + username).once('value');
-        if (usernameCheck.exists()) { alert('Это имя пользователя уже занято'); return; }
-
-        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          size: 'invisible'
-        });
-
-        const result = await auth.signInWithPhoneNumber(phone, appVerifier);
-        confirmationResult = result;
-        currentAuthMode = 'register';
-        regData = { phone: phone, normalizedPhone: normalized, username: username };
-        document.getElementById('code-sent-to').textContent = 'Код отправлен на ' + phone;
-        document.getElementById('sms-code').value = '';
-        showStep('code');
-        startResendTimer();
-      } catch (e) {
-        alert('Ошибка: ' + e.message);
-      }
-    }
-
-    async function verifyCode() {
-      const code = document.getElementById('sms-code').value.trim();
-      if (!code || code.length < 4) { alert('Введите код из SMS'); return; }
+      if (!email || !pass) { alert('Заполните все поля'); return; }
 
       try {
-        const result = await confirmationResult.confirm(code);
-        const user = result.user;
-
-        if (currentAuthMode === 'register') {
-          await db.ref('users/' + user.uid).set({
-            phone: regData.phone,
-            username: regData.username,
-            uid: user.uid,
-            createdAt: new Date().toISOString()
-          });
-          await db.ref('phoneIndex/' + regData.normalizedPhone).set(user.uid);
-          await db.ref('usernameIndex/' + regData.username).set(user.uid);
-          regData = null;
-        } else if (currentAuthMode === 'login') {
-          const snap = await db.ref('users/' + user.uid).once('value');
-          if (!snap.exists()) {
-            alert('Ошибка: профиль не найден');
-            await auth.signOut();
-            return;
-          }
-        }
-
-        clearResendTimer();
-        showStep('choose');
-      } catch (e) {
-        alert('Неверный код. Попробуйте ещё раз.');
-      }
-    }
-
-    async function resendCode() {
-      const phone = currentAuthMode === 'register' ? regData.phone : document.getElementById('login-phone').value.trim();
-      try {
-        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          size: 'invisible'
-        });
-        const result = await auth.signInWithPhoneNumber(phone, appVerifier);
-        confirmationResult = result;
-        startResendTimer();
+        await auth.signInWithEmailAndPassword(email, pass);
       } catch (e) {
         alert('Ошибка: ' + e.message);
       }
@@ -325,45 +314,23 @@
         return;
       }
 
-      const q = query.trim().toLowerCase();
+      const q = query.trim().toLowerCase().replace('@', '');
       const results = [];
 
       try {
-        if (/^[a-z0-9_]/.test(q)) {
-          const allUsernames = await db.ref('usernameIndex').once('value');
-          if (allUsernames.exists()) {
-            const promises = [];
-            allUsernames.forEach(child => {
-              if (child.key.startsWith(q)) {
-                const uid = child.val();
-                if (uid !== (currentUser && currentUser.uid)) {
-                  promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? s.val() : null));
-                }
+        const allUsernames = await db.ref('usernameIndex').once('value');
+        if (allUsernames.exists()) {
+          const promises = [];
+          allUsernames.forEach(child => {
+            if (child.key.startsWith(q)) {
+              const uid = child.val();
+              if (uid !== (currentUser && currentUser.uid)) {
+                promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? s.val() : null));
               }
-            });
-            const users = await Promise.all(promises);
-            users.filter(Boolean).forEach(u => results.push(u));
-          }
-        }
-
-        const normQ = normalizePhone(q);
-        if (/^[0-9+]/.test(normQ) && normQ.length >= 4) {
-          const allPhones = await db.ref('phoneIndex').once('value');
-          if (allPhones.exists()) {
-            const promises = [];
-            allPhones.forEach(child => {
-              if (child.key.includes(normQ)) {
-                const uid = child.val();
-                if (uid !== (currentUser && currentUser.uid)) {
-                  promises.push(db.ref('users/' + uid).once('value').then(s => s.exists() ? s.val() : null));
-                }
-              }
-            });
-            const users = await Promise.all(promises);
-            users.filter(Boolean).forEach(u => {
-              if (!results.find(r => r.uid === u.uid)) results.push(u);
-            });
-          }
+            }
+          });
+          const users = await Promise.all(promises);
+          users.filter(Boolean).forEach(u => results.push(u));
         }
 
         renderSearchResults(results);
@@ -385,9 +352,9 @@
       results.forEach(u => {
         const div = document.createElement('div');
         div.className = 'list-item';
-        const displayName = u.username ? '@' + u.username : u.phone;
-        const initial = (u.username || u.phone)[0].toUpperCase();
-        div.innerHTML = `<div class="avatar">${initial}</div><div><div>${displayName}</div><div style="font-size:11px;color:#8899a6">${u.phone || ''}</div></div>`;
+        const displayName = u.username ? '@' + u.username : u.email;
+        const initial = getInitial(u);
+        div.innerHTML = `<div class="avatar">${initial}</div><div>${displayName}</div>`;
         div.onclick = () => {
           openPrivateChat(u.uid, displayName);
           searchResults.style.display = 'none';
@@ -433,19 +400,94 @@
       chatList.querySelector('.list-item').classList.add('active');
     }
 
+    function openSettings() {
+      document.getElementById('set-email').value = currentUserData && currentUserData.email ? currentUserData.email : '';
+      document.getElementById('set-username').value = currentUserData && currentUserData.username ? currentUserData.username : '';
+      document.getElementById('set-username-current').textContent = currentUserData && currentUserData.username ? 'Текущий: @' + currentUserData.username : 'Имя не установлено';
+      document.getElementById('set-username-error').textContent = '';
+      document.getElementById('set-password').value = '';
+      document.getElementById('set-password-error').textContent = '';
+      settingsPanel.classList.add('active');
+    }
+
+    function closeSettings() {
+      settingsPanel.classList.remove('active');
+    }
+
+    async function changeUsername() {
+      const newUsername = document.getElementById('set-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const errEl = document.getElementById('set-username-error');
+      errEl.textContent = '';
+
+      if (newUsername.length < 3) { errEl.textContent = 'Минимум 3 символа'; return; }
+      if (newUsername.length > 20) { errEl.textContent = 'Максимум 20 символов'; return; }
+      if (currentUserData && currentUserData.username === newUsername) { errEl.textContent = 'Такое имя уже у вас'; return; }
+
+      try {
+        const check = await db.ref('usernameIndex/' + newUsername).once('value');
+        if (check.exists()) { errEl.textContent = 'Это имя уже занято'; return; }
+
+        const uid = currentUser.uid;
+        if (currentUserData && currentUserData.username) {
+          await db.ref('usernameIndex/' + currentUserData.username).remove();
+        }
+        await db.ref('users/' + uid + '/username').set(newUsername);
+        await db.ref('usernameIndex/' + newUsername).set(uid);
+
+        currentUserData.username = newUsername;
+        userName.textContent = '@' + newUsername;
+        userAvatar.textContent = newUsername[0].toUpperCase();
+        document.getElementById('set-username-current').textContent = 'Текущий: @' + newUsername;
+        errEl.textContent = 'Имя изменено!';
+        errEl.style.color = '#2ecc71';
+      } catch (e) {
+        errEl.textContent = 'Ошибка: ' + e.message;
+      }
+    }
+
+    async function changePassword() {
+      const newPass = document.getElementById('set-password').value;
+      const errEl = document.getElementById('set-password-error');
+      errEl.textContent = '';
+
+      if (newPass.length < 6) { errEl.textContent = 'Минимум 6 символов'; return; }
+
+      try {
+        await currentUser.updatePassword(newPass);
+        errEl.textContent = 'Пароль изменён!';
+        errEl.style.color = '#2ecc71';
+        document.getElementById('set-password').value = '';
+      } catch (e) {
+        errEl.textContent = 'Ошибка: ' + e.message;
+      }
+    }
+
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentUser = user;
         const snap = await db.ref('users/' + user.uid).once('value');
-        if (snap.exists()) currentUserData = snap.val();
+        if (snap.exists()) {
+          currentUserData = snap.val();
+        } else {
+          currentUserData = { email: user.email, uid: user.uid };
+        }
+
+        if (!currentUserData.username) {
+          auth.signOut();
+          pendingRegUser = user;
+          document.getElementById('modal-username').value = '';
+          document.getElementById('username-preview').textContent = '';
+          document.getElementById('username-error').textContent = '';
+          modalOverlay.classList.add('active');
+          return;
+        }
 
         authDiv.style.display = 'none';
         sidebar.style.display = 'flex';
         main.style.display = 'flex';
 
-        const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : user.phoneNumber;
-        userName.textContent = displayName;
-        userAvatar.textContent = (currentUserData && currentUserData.username ? currentUserData.username : user.phoneNumber).replace('+', '')[0].toUpperCase();
+        userName.textContent = getDisplayName(currentUserData);
+        userAvatar.textContent = getInitial(currentUserData);
         loadMessages();
       } else {
         currentUser = null;
@@ -456,7 +498,7 @@
     function sendMsg() {
       const text = document.getElementById('msg-input').value;
       if (!text || !currentUser) return;
-      const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : currentUser.phoneNumber;
+      const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : currentUser.email;
       db.ref('messages/' + currentChatId).push({
         user: displayName,
         userId: currentUser.uid,
@@ -487,7 +529,6 @@
         main.style.display = 'none';
         authDiv.style.display = 'flex';
         chatList.innerHTML = `<div class="list-item active" onclick="openGeneralChat()"><div class="avatar">O</div><div>Общий чат</div></div>`;
-        showStep('choose');
       });
     }
   </script>
