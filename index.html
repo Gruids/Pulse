@@ -42,12 +42,13 @@
     #input-area button { padding:10px 20px; border:none; border-radius:5px; background:#2b5278; color:#fff; cursor:pointer; }
     #auth { position:fixed; inset:0; background:#0e1621; display:flex; justify-content:center; align-items:center; }
     .auth-form { background:#17212b; padding:30px; border-radius:10px; width:360px; }
-    .auth-form h2 { margin-bottom:15px; text-align:center; font-size:20px; }
-    .auth-form input { width:100%; padding:12px; margin:6px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:15px; }
-    .auth-form button { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:15px; font-weight:bold; }
-    .auth-form .tab { display:flex; margin-bottom:15px; }
-    .auth-form .tab button { flex:1; margin:0; border-radius:8px 8px 0 0; background:#242f3d; font-size:14px; font-weight:bold; padding:10px; }
-    .auth-form .tab button.active { background:#2b5278; }
+    .auth-form h2 { margin-bottom:8px; text-align:center; font-size:22px; }
+    .social-btn { width:100%; padding:14px; margin:8px 0; border:none; border-radius:10px; color:#fff; cursor:pointer; font-size:15px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity 0.2s; }
+    .social-btn:hover { opacity:0.85; }
+    .social-btn.google { background:#4285f4; }
+    .social-btn.apple { background:#fff; color:#000; }
+    .social-btn.playgames { background:#6c5ce7; }
+    .social-icon { font-size:18px; font-weight:bold; }
     .field-group { margin:6px 0; }
     .field-group label { font-size:13px; color:#8899a6; display:block; margin-bottom:3px; }
     .hint { font-size:12px; color:#5eb5f7; margin:4px 0 6px; }
@@ -126,43 +127,27 @@
   <div id="auth">
     <div class="auth-form">
       <h2>Pulse</h2>
-      <div class="tab">
-        <button class="active" onclick="showAuthTab('login', this)">Вход</button>
-        <button onclick="showAuthTab('reg', this)">Регистрация</button>
-      </div>
-      <div id="auth-login">
-        <div class="field-group">
-          <label>Логин</label>
-          <input id="login-username" placeholder="Ваш логин">
-        </div>
-        <div class="field-group">
-          <label>Пароль</label>
-          <input id="login-pass" type="password" placeholder="Пароль">
-        </div>
-        <button onclick="doLogin()">Войти</button>
-      </div>
-      <div id="auth-reg" style="display:none">
-        <div class="field-group">
-          <label>Придумайте логин</label>
-          <input id="reg-login" placeholder="Логин (3-20 символов)">
-        </div>
-        <div class="field-group">
-          <label>Придумайте пароль</label>
-          <input id="reg-pass" type="password" placeholder="Минимум 6 символов">
-        </div>
-        <button onclick="doRegister()">Создать аккаунт</button>
-      </div>
+      <p style="color:#8899a6; text-align:center; margin-bottom:20px; font-size:14px;">Войдите через удобный способ</p>
+      <button class="social-btn google" onclick="loginWithGoogle()">
+        <span class="social-icon">G</span> Продолжить с Google
+      </button>
+      <button class="social-btn apple" onclick="loginWithApple()">
+        <span class="social-icon">🍎</span> Продолжить с Apple
+      </button>
+      <button class="social-btn playgames" onclick="loginWithPlayGames()">
+        <span class="social-icon">🎮</span> Продолжить с Play Games
+      </button>
     </div>
   </div>
 
   <div id="modal-overlay">
     <div class="modal">
-      <h3>Выберите имя пользователя</h3>
-      <p>Люди смогут найти вас по этому имени.</p>
-      <input id="modal-username" placeholder="username" oninput="previewModalUsername()">
-      <div class="hint" id="username-preview"></div>
-      <div class="error" id="username-error"></div>
-      <button onclick="saveUsername()">Продолжить</button>
+      <h3>Подтверждение номера</h3>
+      <p id="modal-phone-text">Введите номер телефона для завершения регистрации.</p>
+      <input id="phone-input-modal" placeholder="+79001234567" type="tel">
+      <div class="error" id="phone-modal-error"></div>
+      <button id="modal-phone-btn" onclick="sendModalPhoneCode()">Отправить код</button>
+      <div id="recaptcha-container-modal"></div>
     </div>
   </div>
 
@@ -185,6 +170,14 @@
       <button onclick="verifyPhoneCode()">Подтвердить</button>
       <div id="resend-timer" style="text-align:center; font-size:12px; color:#8899a6; margin-top:5px;"></div>
       <button class="secondary-btn" id="resend-phone-btn" style="display:none; background:#242f3d;" onclick="resendPhoneCode()">Отправить повторно</button>
+    </div>
+    <div class="phone-modal" id="phone-step-username" style="display:none;">
+      <h3>Выберите имя пользователя</h3>
+      <p>Люди смогут найти вас по этому имени</p>
+      <input id="phone-step-username-input" placeholder="username" oninput="previewSocialUsername()">
+      <div class="hint" id="social-username-preview"></div>
+      <div class="error" id="social-username-error"></div>
+      <button onclick="saveSocialUsername()">Готово</button>
     </div>
   </div>
 
@@ -216,6 +209,7 @@
         <div class="info-row"><span class="label">Имя пользователя</span><span class="value" id="profile-username"></span></div>
         <div class="info-row"><span class="label">Телефон</span><span class="value" id="profile-phone"></span></div>
         <div class="info-row"><span class="label">Статус</span><span class="value" id="profile-status"></span></div>
+        <div class="info-row"><span class="label">Вход через</span><span class="value" id="profile-provider"></span></div>
         <div class="info-row"><span class="label">Дата регистрации</span><span class="value" id="profile-created"></span></div>
       </div>
     </div>
@@ -225,15 +219,14 @@
         <div id="favorites-list"></div>
       </div>
     </div>
-    <div class="menu-content" id="menu-view-settings">
+      <div class="menu-content" id="menu-view-settings">
       <div class="menu-content-inner">
         <h2>Настройки</h2>
 
-        <div class="edit-section" id="temp-section">
-          <label style="color:#e74c3c; font-weight:bold;">⚠ Временный аккаунт</label>
-          <p style="font-size:12px; color:#8899a6; margin:5px 0 10px;">Подтвердите номер в течение 30 дней, иначе аккаунт будет удалён.</p>
+        <div class="edit-section" id="temp-section" style="display:none;">
+          <label style="color:#e74c3c; font-weight:bold;">⚠ Номер не подтверждён</label>
+          <p style="font-size:12px; color:#8899a6; margin:5px 0 10px;">Для полного доступа подтвердите номер телефона.</p>
           <p style="font-size:12px; color:#e74c3c; margin:0 0 5px;">Лимиты SMS — если не получилось сегодня, попробуйте завтра.</p>
-          <p style="font-size:12px; color:#5eb5f7; margin:0 0 10px;" id="settings-deadline"></p>
           <button class="save-btn" onclick="openPhoneVerify(); closeMenu();" style="background:#e74c3c;">Подтвердить номер</button>
         </div>
 
@@ -246,10 +239,9 @@
         </div>
 
         <div class="edit-section">
-          <label>Пароль</label>
-          <input id="set-password" type="password" placeholder="Новый пароль (мин 6 символов)">
-          <div class="error-text" id="set-password-error"></div>
-          <button class="save-btn" onclick="changePassword()">Изменить пароль</button>
+          <label>Телефон</label>
+          <input id="set-phone-display" disabled>
+          <div id="set-phone-info" style="font-size:11px; color:#5eb5f7; margin-top:2px;"></div>
         </div>
       </div>
     </div>
@@ -334,17 +326,27 @@
     let currentUserData = null;
     let currentChatId = 'general';
     let currentChatType = 'general';
-    let pendingRegUser = null;
     let phoneConfirmResult = null;
     let phoneResendInterval = null;
     let phoneVerifyUid = null;
     let favoritesData = {};
+    let socialLoginProvider = null;
+    let socialLoginUser = null;
+    let modalPhoneConfirm = null;
+    let modalPhoneResendInterval = null;
 
-    function showAuthTab(tab, btn) {
-      document.querySelectorAll('.auth-form .tab button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('auth-login').style.display = tab === 'login' ? 'block' : 'none';
-      document.getElementById('auth-reg').style.display = tab === 'reg' ? 'block' : 'none';
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(e => showToast('Ошибка Google: ' + e.message, 'warning'));
+    }
+
+    function loginWithApple() {
+      const provider = new firebase.auth.OAuthProvider('apple.com');
+      auth.signInWithPopup(provider).catch(e => showToast('Ошибка Apple: ' + e.message, 'warning'));
+    }
+
+    function loginWithPlayGames() {
+      showToast('Play Games: требуется Android приложение', 'warning');
     }
 
     function getInitial(data) {
@@ -401,7 +403,9 @@
       document.getElementById('profile-login').textContent = d.login || '—';
       document.getElementById('profile-username').textContent = d.username ? '@' + d.username : 'Не установлено';
       document.getElementById('profile-phone').textContent = d.phone || 'Не подтверждён';
-      document.getElementById('profile-status').textContent = d.phoneVerified ? '✓ Подтверждён' : '⚠ Временный';
+      document.getElementById('profile-status').textContent = d.phoneVerified ? '✓ Подтверждён' : '⚠ Не подтверждён';
+      const prov = d.provider ? d.provider.replace('.com', '').charAt(0).toUpperCase() + d.provider.replace('.com', '').slice(1) : 'Неизвестно';
+      document.getElementById('profile-provider').textContent = prov;
       document.getElementById('profile-created').textContent = d.createdAt ? new Date(d.createdAt).toLocaleDateString('ru-RU') : '—';
     }
 
@@ -412,94 +416,105 @@
       document.getElementById('set-username').value = d.username || '';
       document.getElementById('set-username-info').textContent = d.username ? 'Текущий: @' + d.username : 'Имя не установлено';
       document.getElementById('set-username-error').textContent = '';
-      document.getElementById('set-password').value = '';
-      document.getElementById('set-password-error').textContent = '';
-
-      if (!isVerified && d.createdAt) {
-        const deadline = new Date(new Date(d.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000);
-        document.getElementById('settings-deadline').textContent = 'Удаление после: ' + deadline.toLocaleDateString('ru-RU');
-      }
+      document.getElementById('set-phone-display').value = d.phone || 'Не указан';
+      document.getElementById('set-phone-info').textContent = isVerified ? '✓ Подтверждён' : '⚠ Не подтверждён';
     }
 
-    async function doRegister() {
-      const login = document.getElementById('reg-login').value.trim().toLowerCase();
-      const pass = document.getElementById('reg-pass').value;
-      if (!login || !pass) { showToast('Заполните все поля', 'warning'); return; }
-      if (!/^[a-z0-9_]{3,20}$/.test(login)) { showToast('Логин: 3-20 символов, латиница, цифры, _', 'warning'); return; }
-      if (pass.length < 6) { showToast('Пароль минимум 6 символов', 'warning'); return; }
+    async function sendModalPhoneCode() {
+      const phone = document.getElementById('phone-input-modal').value.trim();
+      const errEl = document.getElementById('phone-modal-error');
+      if (!phone || phone.length < 10) { errEl.textContent = 'Введите корректный номер'; return; }
 
-      const fakeEmail = login + '@pulse-messenger.com';
+      const normalized = normalizePhone(phone);
       try {
-        const existing = await db.ref('loginIndex/' + login).once('value');
-        if (existing.exists()) { showToast('Логин уже занят', 'warning'); return; }
-        const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
-        const user = cred.user;
-        await writeUserToDb(user, login);
-        showUsernameModal(user);
-      } catch (e) {
-        if (e.code === 'auth/email-already-in-use') { showToast('Логин уже зарегистрирован. Войдите.', 'warning'); }
-        else { showToast('Ошибка: ' + e.message, 'warning'); }
-      }
+        const existing = await db.ref('phoneIndex/' + normalized).once('value');
+        if (existing.exists()) { errEl.textContent = 'Номер уже используется'; return; }
+      } catch (e) { errEl.textContent = 'Ошибка проверки'; return; }
+
+      try {
+        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container-modal', { size: 'invisible' });
+        modalPhoneConfirm = await auth.currentUser.signInWithPhoneNumber(phone, appVerifier);
+        document.getElementById('phone-input-modal').style.display = 'none';
+        document.getElementById('modal-phone-btn').style.display = 'none';
+        document.getElementById('phone-modal-error').style.display = 'none';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.innerHTML = `<p>Код отправлен на ${phone}</p><input id="modal-code-input" placeholder="000000" maxlength="6" type="tel" style="text-align:center; letter-spacing:8px; font-size:22px;"><div class="error" id="modal-code-error"></div><button onclick="verifyModalCode()">Подтвердить</button><div id="modal-resend-timer" style="text-align:center; font-size:12px; color:#8899a6; margin-top:5px;"></div><button onclick="resendModalCode()" id="modal-resend-btn" style="display:none; background:#242f3d; margin-top:5px;">Отправить повторно</button>`;
+        document.querySelector('.modal').appendChild(codeDiv);
+        startModalResendTimer(phone);
+      } catch (e) { errEl.textContent = 'Ошибка: ' + e.message; }
     }
 
-    function writeUserToDb(user, login) {
-      return new Promise((resolve, reject) => {
-        db.ref('users/' + user.uid).set({ login, uid: user.uid, createdAt: new Date().toISOString(), phoneVerified: false }, e1 => {
-          if (e1) { reject(e1); return; }
-          db.ref('loginIndex/' + login).set(user.uid, e2 => { if (e2) reject(e2); else resolve(); });
+    async function verifyModalCode() {
+      const code = document.getElementById('modal-code-input').value.trim();
+      if (!code || code.length < 4) { document.getElementById('modal-code-error').textContent = 'Введите код'; return; }
+      try {
+        await modalPhoneConfirm.confirm(code);
+        const user = auth.currentUser;
+        const phone = user.phoneNumber;
+        const normalized = normalizePhone(phone);
+        const provider = user.providerData[0] ? user.providerData[0].providerId : 'unknown';
+
+        await db.ref('users/' + user.uid).set({
+          login: provider + '_' + user.uid.substring(0, 10),
+          uid: user.uid,
+          phone: phone,
+          normalizedPhone: normalized,
+          phoneVerified: true,
+          phoneVerifiedAt: new Date().toISOString(),
+          provider: provider,
+          createdAt: new Date().toISOString()
         });
-      });
+        await db.ref('phoneIndex/' + normalized).set(user.uid);
+        await db.ref('loginIndex/' + (provider + '_' + user.uid.substring(0, 10))).set(user.uid);
+
+        modalOverlay.classList.remove('active');
+        document.getElementById('phone-input-modal').style.display = '';
+        document.getElementById('modal-phone-btn').style.display = '';
+        document.getElementById('phone-modal-error').style.display = '';
+        document.querySelector('.modal').querySelector('div:last-child')?.remove();
+      } catch (e) { document.getElementById('modal-code-error').textContent = 'Неверный код'; }
     }
 
-    function showUsernameModal(user) {
-      pendingRegUser = user;
-      document.getElementById('modal-username').value = '';
-      document.getElementById('username-preview').textContent = '';
-      document.getElementById('username-error').textContent = '';
-      modalOverlay.classList.add('active');
-      document.getElementById('modal-username').focus();
+    function startModalResendTimer(phone) {
+      let s = 30;
+      const timerEl = document.getElementById('modal-resend-timer');
+      const resendBtn = document.getElementById('modal-resend-btn');
+      timerEl.textContent = 'Повторно через ' + s + 'с';
+      clearInterval(modalPhoneResendInterval);
+      modalPhoneResendInterval = setInterval(() => { s--; if (s <= 0) { clearInterval(modalPhoneResendInterval); timerEl.textContent = ''; resendBtn.style.display = 'block'; } else { timerEl.textContent = 'Повторно через ' + s + 'с'; } }, 1000);
     }
 
-    function previewModalUsername() {
-      const raw = document.getElementById('modal-username').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
-      document.getElementById('modal-username').value = raw;
-      document.getElementById('username-preview').textContent = raw.length >= 3 ? '@' + raw : '';
+    async function resendModalCode() {
+      document.getElementById('modal-resend-btn').style.display = 'none';
+      const phone = document.getElementById('phone-input-modal').value.trim();
+      try {
+        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container-modal', { size: 'invisible' });
+        modalPhoneConfirm = await auth.currentUser.signInWithPhoneNumber(phone, appVerifier);
+        startModalResendTimer(phone);
+      } catch (e) { document.getElementById('modal-code-error').textContent = 'Ошибка: ' + e.message; }
     }
 
-    async function saveUsername() {
-      const username = document.getElementById('modal-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-      if (username.length < 3) { document.getElementById('username-error').textContent = 'Минимум 3 символа'; return; }
-      if (username.length > 20) { document.getElementById('username-error').textContent = 'Максимум 20 символов'; return; }
+    function previewSocialUsername() {
+      const raw = document.getElementById('phone-step-username-input').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
+      document.getElementById('phone-step-username-input').value = raw;
+      document.getElementById('social-username-preview').textContent = raw.length >= 3 ? '@' + raw : '';
+    }
 
-      const user = auth.currentUser || pendingRegUser;
-      if (!user || !user.uid) { showToast('Ошибка авторизации', 'warning'); return; }
-
+    async function saveSocialUsername() {
+      const username = document.getElementById('phone-step-username-input').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (username.length < 3) { document.getElementById('social-username-error').textContent = 'Минимум 3 символа'; return; }
+      if (username.length > 20) { document.getElementById('social-username-error').textContent = 'Максимум 20 символов'; return; }
       try {
         const snap = await db.ref('usernameIndex/' + username).once('value');
-        if (snap.exists()) { document.getElementById('username-error').textContent = 'Имя занято'; return; }
-        await new Promise((resolve, reject) => {
-          db.ref('users/' + user.uid + '/username').set(username, e1 => {
-            if (e1) { reject(e1); return; }
-            db.ref('usernameIndex/' + username).set(user.uid, e2 => { if (e2) reject(e2); else resolve(); });
-          });
-        });
-        modalOverlay.classList.remove('active');
-        pendingRegUser = null;
-      } catch (e) { showToast('Ошибка: ' + e.message, 'warning'); }
-    }
-
-    async function doLogin() {
-      const login = document.getElementById('login-username').value.trim().toLowerCase();
-      const pass = document.getElementById('login-pass').value;
-      if (!login || !pass) { showToast('Заполните все поля', 'warning'); return; }
-      try {
-        const snap = await db.ref('loginIndex/' + login).once('value');
-        if (!snap.exists()) { showToast('Пользователь не найден', 'warning'); return; }
-        const uid = snap.val();
-        const userData = await db.ref('users/' + uid).once('value');
-        if (!userData.exists()) { showToast('Ошибка профиля', 'warning'); return; }
-        await auth.signInWithEmailAndPassword(userData.val().login + '@pulse-messenger.com', pass);
-      } catch (e) { showToast('Ошибка: ' + e.message, 'warning'); }
+        if (snap.exists()) { document.getElementById('social-username-error').textContent = 'Имя занято'; return; }
+        const user = auth.currentUser;
+        await db.ref('users/' + user.uid + '/username').set(username);
+        await db.ref('usernameIndex/' + username).set(user.uid);
+        document.getElementById('social-username-error').textContent = '';
+        showToast('Имя установлено!', 'success');
+        setTimeout(() => { phoneModalOverlay.classList.remove('active'); }, 500);
+      } catch (e) { document.getElementById('social-username-error').textContent = 'Ошибка: ' + e.message; }
     }
 
     async function searchUsers(query) {
@@ -682,9 +697,13 @@
         const normalized = normalizePhone(phone);
         await db.ref('users/' + phoneVerifyUid).update({ phone, normalizedPhone: normalized, phoneVerified: true, phoneVerifiedAt: new Date().toISOString() });
         await db.ref('phoneIndex/' + normalized).set(phoneVerifyUid);
-        await auth.signOut();
         phoneModalOverlay.classList.remove('active');
-        showToast('Номер подтверждён! Войдите снова.', 'success');
+        showToast('Номер подтверждён!', 'success');
+        currentUserData.phone = phone;
+        currentUserData.normalizedPhone = normalized;
+        currentUserData.phoneVerified = true;
+        currentUserData.phoneVerifiedAt = new Date().toISOString();
+        updateMenuProfile();
       } catch (e) { document.getElementById('phone-code-error').textContent = 'Неверный код'; }
     }
 
@@ -730,32 +749,33 @@
       } catch (e) { errEl.textContent = 'Ошибка: ' + e.message; }
     }
 
-    async function changePassword() {
-      const newPass = document.getElementById('set-password').value;
-      const errEl = document.getElementById('set-password-error');
-      errEl.textContent = ''; errEl.className = 'error-text';
-      if (newPass.length < 6) { errEl.textContent = 'Минимум 6 символов'; return; }
-      try {
-        await currentUser.updatePassword(newPass);
-        errEl.textContent = 'Пароль изменён!'; errEl.className = 'success-text';
-        document.getElementById('set-password').value = '';
-      } catch (e) { errEl.textContent = 'Ошибка: ' + e.message; }
+    function changePassword() {
+      showToast('Пароль не используется при входе через соцсети', '');
     }
 
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentUser = user;
         const snap = await db.ref('users/' + user.uid).once('value');
-        if (snap.exists()) currentUserData = snap.val();
-        else currentUserData = { login: '', uid: user.uid, phoneVerified: false, createdAt: new Date().toISOString() };
+        if (snap.exists()) {
+          currentUserData = snap.val();
+        } else {
+          authDiv.style.display = 'none';
+          modalOverlay.classList.add('active');
+          document.getElementById('phone-input-modal').value = '';
+          document.getElementById('phone-modal-error').textContent = '';
+          return;
+        }
 
         if (!currentUserData.username) {
-          auth.signOut();
-          pendingRegUser = user;
-          document.getElementById('modal-username').value = '';
-          document.getElementById('username-preview').textContent = '';
-          document.getElementById('username-error').textContent = '';
-          modalOverlay.classList.add('active');
+          authDiv.style.display = 'none';
+          phoneModalOverlay.classList.add('active');
+          document.getElementById('phone-step-phone').style.display = 'none';
+          document.getElementById('phone-step-code').style.display = 'none';
+          document.getElementById('phone-step-username').style.display = 'block';
+          document.getElementById('phone-step-username-input').value = '';
+          document.getElementById('social-username-preview').textContent = '';
+          document.getElementById('social-username-error').textContent = '';
           return;
         }
 
@@ -773,7 +793,6 @@
       const text = document.getElementById('msg-input').value;
       if (!text || !currentUser) return;
       if (currentChatId === 'favorites') { showToast('Нельзя писать в избранное', 'warning'); return; }
-      if (currentUserData.phoneVerified !== true) showToast('⚠ Номер не подтверждён', 'warning');
       const displayName = currentUserData && currentUserData.username ? '@' + currentUserData.username : currentUserData.login;
       db.ref('messages/' + currentChatId).push({ user: displayName, userId: currentUser.uid, text, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), unverified: currentUserData.phoneVerified !== true });
       document.getElementById('msg-input').value = '';
@@ -809,7 +828,6 @@
         authDiv.style.display = 'flex';
         unverifiedBanner.classList.remove('active');
         closeMenu();
-        chatList.innerHTML = `<div class="list-item" onclick="openFavorites()" data-chat="favorites"><div class="avatar" style="background:#f39c12;">★</div><div>Избранное</div></div><div class="list-item active" onclick="openGeneralChat()"><div class="avatar">O</div><div>Общий чат</div></div>`;
       });
     }
   </script>
