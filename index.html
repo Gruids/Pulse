@@ -43,11 +43,14 @@
     #auth { position:fixed; inset:0; background:#0e1621; display:flex; justify-content:center; align-items:center; }
     .auth-form { background:#17212b; padding:30px; border-radius:10px; width:360px; }
     .auth-form h2 { margin-bottom:8px; text-align:center; font-size:22px; }
+    .auth-form .tab { display:flex; margin-bottom:15px; }
+    .auth-form .tab button { flex:1; margin:0; border-radius:8px 8px 0 0; background:#242f3d; font-size:14px; font-weight:bold; padding:10px; border:none; color:#fff; cursor:pointer; }
+    .auth-form .tab button.active { background:#2b5278; }
+    .auth-form input { width:100%; padding:12px; margin:6px 0; border:none; border-radius:8px; background:#242f3d; color:#fff; font-size:15px; }
+    .auth-form button { width:100%; padding:12px; margin:8px 0; border:none; border-radius:8px; background:#2b5278; color:#fff; cursor:pointer; font-size:15px; font-weight:bold; }
     .social-btn { width:100%; padding:14px; margin:8px 0; border:none; border-radius:10px; color:#fff; cursor:pointer; font-size:15px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity 0.2s; }
     .social-btn:hover { opacity:0.85; }
     .social-btn.google { background:#4285f4; }
-    .social-btn.apple { background:#fff; color:#000; }
-    .social-btn.playgames { background:#6c5ce7; }
     .social-icon { font-size:18px; font-weight:bold; }
     .field-group { margin:6px 0; }
     .field-group label { font-size:13px; color:#8899a6; display:block; margin-bottom:3px; }
@@ -126,11 +129,29 @@
 <body>
   <div id="auth">
     <div class="auth-form">
-      <h2>Pulse</h2>
-      <p style="color:#8899a6; text-align:center; margin-bottom:20px; font-size:14px;">Войдите через удобный способ</p>
-      <button class="social-btn google" onclick="loginWithGoogle()">
-        <span class="social-icon">G</span> Продолжить с Google
-      </button>
+      <div class="tab">
+        <button class="active" onclick="showAuthTab('social', this)">Вход</button>
+        <button onclick="showAuthTab('reg', this)">Регистрация</button>
+      </div>
+      <div id="auth-social">
+        <p style="color:#8899a6; text-align:center; margin:10px 0 20px; font-size:14px;">Быстрый вход</p>
+        <button class="social-btn google" onclick="loginWithGoogle()">
+          <span class="social-icon">G</span> Продолжить с Google
+        </button>
+      </div>
+      <div id="auth-reg" style="display:none">
+        <p style="color:#8899a6; text-align:center; margin:10px 0 20px; font-size:14px;">Создать аккаунт</p>
+        <div class="field-group">
+          <label>Придумайте логин</label>
+          <input id="reg-login" placeholder="Логин (3-20 символов)">
+        </div>
+        <div class="field-group">
+          <label>Пароль</label>
+          <input id="reg-pass" type="password" placeholder="Минимум 6 символов">
+        </div>
+        <button onclick="doRegister()">Зарегистрироваться</button>
+        <p style="font-size:11px; color:#e74c3c; margin-top:8px; text-align:center;">⚠ Это временный аккаунт (30 дней)</p>
+      </div>
     </div>
   </div>
 
@@ -329,6 +350,42 @@
     let modalPhoneConfirm = null;
     let modalPhoneResendInterval = null;
 
+    function showAuthTab(tab, btn) {
+      document.querySelectorAll('.auth-form .tab button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('auth-social').style.display = tab === 'social' ? 'block' : 'none';
+      document.getElementById('auth-reg').style.display = tab === 'reg' ? 'block' : 'none';
+    }
+
+    async function doRegister() {
+      const login = document.getElementById('reg-login').value.trim().toLowerCase();
+      const pass = document.getElementById('reg-pass').value;
+      if (!login || !pass) { showToast('Заполните все поля', 'warning'); return; }
+      if (!/^[a-z0-9_]{3,20}$/.test(login)) { showToast('Логин: 3-20 символов, латиница, цифры, _', 'warning'); return; }
+      if (pass.length < 6) { showToast('Пароль минимум 6 символов', 'warning'); return; }
+
+      const fakeEmail = login + '@pulse-messenger.com';
+      try {
+        const existing = await db.ref('loginIndex/' + login).once('value');
+        if (existing.exists()) { showToast('Логин уже занят', 'warning'); return; }
+        const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
+        const user = cred.user;
+        await db.ref('users/' + user.uid).set({ login, uid: user.uid, createdAt: new Date().toISOString(), phoneVerified: false, method: 'login' });
+        await db.ref('loginIndex/' + login).set(user.uid);
+        showUsernameModal(user);
+      } catch (e) {
+        if (e.code === 'auth/email-already-in-use') { showToast('Логин уже зарегистрирован', 'warning'); }
+        else { showToast('Ошибка: ' + e.message, 'warning'); }
+      }
+    }
+
+    function showUsernameModal(user) {
+      document.getElementById('modal-phone-text').textContent = 'Введите номер телефона';
+      document.getElementById('phone-input-modal').value = '';
+      document.getElementById('phone-modal-error').textContent = '';
+      modalOverlay.classList.add('active');
+    }
+
     function loginWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).catch(e => showToast('Ошибка: ' + e.message, 'warning'));
@@ -397,7 +454,24 @@
     function updateSettingsView() {
       const d = currentUserData || {};
       const isVerified = d.phoneVerified === true;
-      document.getElementById('temp-section').style.display = isVerified ? 'none' : 'block';
+      const method = d.method || 'google';
+      
+      const tempSection = document.getElementById('temp-section');
+      if (isVerified) {
+        tempSection.style.display = 'none';
+      } else {
+        tempSection.style.display = 'block';
+        const title = tempSection.querySelector('label');
+        const desc = tempSection.querySelector('p');
+        if (method === 'login') {
+          title.textContent = '⚠ Временный аккаунт';
+          desc.textContent = 'Подтвердите номер в течение 30 дней, иначе аккаунт будет удалён.';
+        } else {
+          title.textContent = '⚠ Требуется подтверждение номера';
+          desc.textContent = 'Подтвердите номер для получения полного доступа ко всем функциям.';
+        }
+      }
+      
       document.getElementById('set-username').value = d.username || '';
       document.getElementById('set-username-info').textContent = d.username ? 'Текущий: @' + d.username : 'Имя не установлено';
       document.getElementById('set-username-error').textContent = '';
@@ -422,8 +496,10 @@
         document.getElementById('phone-input-modal').style.display = 'none';
         document.getElementById('modal-phone-btn').style.display = 'none';
         document.getElementById('phone-modal-error').style.display = 'none';
+        document.getElementById('recaptcha-container-modal').style.display = 'none';
 
         const codeDiv = document.createElement('div');
+        codeDiv.style.marginTop = '10px';
         codeDiv.innerHTML = `<p>Код отправлен на ${phone}</p><input id="modal-code-input" placeholder="000000" maxlength="6" type="tel" style="text-align:center; letter-spacing:8px; font-size:22px;"><div class="error" id="modal-code-error"></div><button onclick="verifyModalCode()">Подтвердить</button><div id="modal-resend-timer" style="text-align:center; font-size:12px; color:#8899a6; margin-top:5px;"></div><button onclick="resendModalCode()" id="modal-resend-btn" style="display:none; background:#242f3d; margin-top:5px;">Отправить повторно</button>`;
         document.querySelector('.modal').appendChild(codeDiv);
         startModalResendTimer(phone);
@@ -438,26 +514,27 @@
         const user = auth.currentUser;
         const phone = user.phoneNumber;
         const normalized = normalizePhone(phone);
-        const provider = user.providerData[0] ? user.providerData[0].providerId : 'unknown';
 
-        await db.ref('users/' + user.uid).set({
-          login: provider + '_' + user.uid.substring(0, 10),
-          uid: user.uid,
+        await db.ref('users/' + user.uid).update({
           phone: phone,
           normalizedPhone: normalized,
           phoneVerified: true,
-          phoneVerifiedAt: new Date().toISOString(),
-          provider: provider,
-          createdAt: new Date().toISOString()
+          phoneVerifiedAt: new Date().toISOString()
         });
         await db.ref('phoneIndex/' + normalized).set(user.uid);
-        await db.ref('loginIndex/' + (provider + '_' + user.uid.substring(0, 10))).set(user.uid);
 
         modalOverlay.classList.remove('active');
+        const codeDiv = document.querySelector('.modal').querySelector('div:last-child');
+        if (codeDiv) codeDiv.remove();
         document.getElementById('phone-input-modal').style.display = '';
         document.getElementById('modal-phone-btn').style.display = '';
         document.getElementById('phone-modal-error').style.display = '';
-        document.querySelector('.modal').querySelector('div:last-child')?.remove();
+        document.getElementById('recaptcha-container-modal').style.display = '';
+
+        showToast('Номер подтверждён!', 'success');
+        currentUserData.phone = phone;
+        currentUserData.phoneVerified = true;
+        updateMenuProfile();
       } catch (e) { document.getElementById('modal-code-error').textContent = 'Неверный код'; }
     }
 
@@ -769,7 +846,19 @@
         main.style.display = 'flex';
         userName.textContent = getDisplayName(currentUserData);
         userAvatar.textContent = getInitial(currentUserData);
-        unverifiedBanner.classList.toggle('active', currentUserData.phoneVerified !== true);
+        
+        const method = currentUserData.method;
+        if (currentUserData.phoneVerified !== true) {
+          unverifiedBanner.classList.add('active');
+          if (method === 'login') {
+            unverifiedBanner.textContent = '⚠ Временный аккаунт. Подтвердите номер в течение 30 дней.';
+          } else {
+            unverifiedBanner.textContent = '⚠ Подтвердите номер в настройках для полного доступа.';
+          }
+        } else {
+          unverifiedBanner.classList.remove('active');
+        }
+        
         loadMessages();
       } else { currentUser = null; currentUserData = null; }
     });
