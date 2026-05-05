@@ -303,7 +303,7 @@
         const loginCheck = await db.ref('loginIndex/' + login).once('value');
         if (loginCheck.exists()) { alert('Этот логин уже занят'); return; }
 
-        const fakeEmail = login + '@pulse.internal';
+        const fakeEmail = login + '@pulse-messenger.com';
         const cred = await auth.createUserWithEmailAndPassword(fakeEmail, pass);
         const user = cred.user;
 
@@ -379,7 +379,7 @@
         const userData = await db.ref('users/' + uid).once('value');
         if (!userData.exists()) { alert('Ошибка профиля'); return; }
 
-        const email = userData.val().login + '@pulse.internal';
+        const email = userData.val().login + '@pulse-messenger.com';
         pendingLoginData = { uid, login, userData: userData.val() };
 
         await auth.signInWithEmailAndPassword(email, pass);
