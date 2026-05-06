@@ -125,246 +125,32 @@
     #toast.active { display:block; }
     #toast.warning { background:#e74c3c; }
     #toast.success { background:#27ae60; }
-  </style>
-      .back-btn { display: none; background: none; border: none; color: #fff; cursor: pointer; font-size: 22px; padding: 5px; margin-right: 5px; }
-      .back-btn:hover { color: #5eb5f7; }
-    }
-      #chat-header { padding: 12px 10px; }
-      #chat-header .avatar { width: 32px; height: 32px; font-size: 13px; }
+    
+    .back-btn { display: none; background: none; border: none; color: #fff; cursor: pointer; font-size: 22px; padding: 5px; margin-right: 5px; }
+    .back-btn:hover { color: #5eb5f7; }
+    
+    @media (max-width: 768px) {
+      .back-btn { display: inline-block; }
+      .menu-btn { display: none !important; }
+      #sidebar-header .menu-btn { display: none !important; }
+      #sidebar { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; }
+      #main { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; display: none !important; }
+      #main.active { display: flex !important; }
+      #chat-header { padding: 10px; }
       #chat-title { font-size: 16px; }
       #messages { padding: 12px 8px; gap: 8px; }
       .msg { max-width: 88%; padding: 10px 12px; font-size: 15px; line-height: 1.4; }
-      .msg .author { font-size: 12px; margin-bottom: 3px; }
-      .msg .time { font-size: 11px; }
       #input-area { padding: 10px 8px; gap: 8px; }
       #input-area input { padding: 14px; font-size: 16px; border-radius: 20px; }
       #input-area button { padding: 14px 20px; font-size: 15px; border-radius: 20px; min-width: 70px; }
       .avatar { width: 40px; height: 40px; font-size: 16px; }
-      .avatar.large { width: 72px; height: 72px; font-size: 30px; margin-bottom: 12px; }
       #sidebar-header { padding: 12px; }
-      #search { padding: 8px; }
       #search input { padding: 12px; font-size: 16px; border-radius: 20px; }
       #search-results { max-height: 250px; }
       .list-item { padding: 14px 12px; font-size: 15px; min-height: 60px; }
       .list-item.active { background: #2b5278; }
-      #menu-panel { width: 85vw; max-width: 320px; }
-      .menu-nav-item { padding: 16px 20px; font-size: 16px; min-height: 50px; }
-      .auth-form { width: 92vw; max-width: 400px; padding: 24px 20px; }
-      .auth-form h2 { font-size: 22px; }
-      .auth-form input { padding: 14px; font-size: 16px; border-radius: 10px; }
-      .auth-form button { padding: 14px; font-size: 16px; border-radius: 10px; }
-      .social-btn { padding: 16px; font-size: 16px; border-radius: 10px; }
-      .modal { width: 92vw; padding: 24px 20px; border-radius: 16px; }
-      .phone-modal { width: 92vw; padding: 24px 20px; border-radius: 16px; }
-      .modal input, .phone-modal input { padding: 14px; font-size: 16px; border-radius: 10px; }
-      .modal button, .phone-modal button { padding: 14px; font-size: 16px; border-radius: 10px; }
-      .menu-content-inner { padding: 16px; }
-      .info-row { padding: 12px 0; font-size: 15px; }
-      .edit-section input { padding: 12px; font-size: 15px; border-radius: 8px; }
-      .edit-section .save-btn { padding: 12px 24px; font-size: 15px; border-radius: 8px; }
-      .menu-btn { font-size: 26px; padding: 8px; }
-      .msg-actions button { width: 28px; height: 28px; font-size: 14px; }
-      #toast { font-size: 14px; padding: 12px 24px; width: 90vw; max-width: 350px; }
-    }
-
-    @media (max-width: 480px) {
-      .msg { max-width: 92%; padding: 8px 10px; font-size: 14px; }
-      #chat-title { font-size: 15px; }
-      #input-area input { padding: 12px; font-size: 15px; }
-      #input-area button { padding: 12px 16px; font-size: 14px; }
-      .list-item { padding: 12px 10px; font-size: 14px; min-height: 56px; }
-      .avatar { width: 36px; height: 36px; font-size: 14px; }
-      .menu-nav-item { padding: 14px 16px; font-size: 15px; }
-      .auth-form { padding: 20px 16px; }
-      .modal, .phone-modal { padding: 20px 16px; }
     }
   </style>
-</head>
-<body>
-  <div id="auth">
-    <div class="auth-form">
-      <h2>Pulse</h2>
-      <div class="tab">
-        <button class="active" onclick="showAuthTab('login', this)">Вход</button>
-        <button onclick="showAuthTab('reg', this)">Регистрация</button>
-      </div>
-      <div id="auth-login">
-        <div class="field-group">
-          <label>Логин</label>
-          <input id="login-username" placeholder="Ваш логин">
-        </div>
-        <div class="field-group">
-          <label>Пароль</label>
-          <input id="login-pass" type="password" placeholder="Пароль">
-        </div>
-        <button onclick="doLogin()">Войти</button>
-        <div style="text-align:center; color:#8899a6; margin:15px 0 10px; font-size:13px;">или</div>
-        <button class="social-btn google" onclick="loginWithGoogle()">
-          <span class="social-icon">G</span> Войти через Google
-        </button>
-      </div>
-      <div id="auth-reg" style="display:none">
-        <div class="field-group">
-          <label>Придумайте логин</label>
-          <input id="reg-login" placeholder="Логин (3-20 символов)">
-        </div>
-        <div class="field-group">
-          <label>Придумайте пароль</label>
-          <input id="reg-pass" type="password" placeholder="Минимум 6 символов">
-        </div>
-        <button onclick="doRegister()">Зарегистрироваться</button>
-        <p style="font-size:11px; color:#e74c3c; margin-top:8px; text-align:center;">⚠ Временный аккаунт (30 дней)</p>
-      </div>
-    </div>
-  </div>
-
-  <div id="modal-overlay">
-    <div class="modal">
-      <h3>Выберите имя пользователя</h3>
-      <p>Люди смогут найти вас по этому имени.</p>
-      <input id="modal-username" placeholder="username" oninput="previewModalUsername()">
-      <div class="hint" id="username-preview"></div>
-      <div class="error" id="username-error"></div>
-      <button onclick="saveUsername()">Продолжить</button>
-    </div>
-  </div>
-
-  <div id="phone-modal-overlay">
-    <div class="phone-modal" id="phone-step-phone">
-      <button class="back-link" onclick="closePhoneModal()">← Назад</button>
-      <h3>Подтверждение телефона</h3>
-      <p>Введите номер — мы отправим SMS с кодом</p>
-      <input id="phone-input" placeholder="+79001234567" type="tel">
-      <div class="error" id="phone-error"></div>
-      <button onclick="sendPhoneCode()">Отправить код</button>
-      <div id="recaptcha-container-phone"></div>
-    </div>
-    <div class="phone-modal" id="phone-step-code" style="display:none;">
-      <button class="back-link" onclick="backToPhoneStep()">← Назад</button>
-      <h3>Введите код из SMS</h3>
-      <p id="code-sent-label"></p>
-      <input id="phone-code-input" placeholder="000000" maxlength="6" type="tel">
-      <div class="error" id="phone-code-error"></div>
-      <button onclick="verifyPhoneCode()">Подтвердить</button>
-      <div id="resend-timer" style="text-align:center; font-size:12px; color:#8899a6; margin-top:5px;"></div>
-      <button class="secondary-btn" id="resend-phone-btn" style="display:none; background:#242f3d;" onclick="resendPhoneCode()">Отправить повторно</button>
-    </div>
-    <div class="phone-modal" id="phone-step-username" style="display:none;">
-      <h3>Выберите имя пользователя</h3>
-      <p>Люди смогут найти вас по этому имени</p>
-      <input id="phone-step-username-input" placeholder="username" oninput="previewSocialUsername()">
-      <div class="hint" id="social-username-preview"></div>
-      <div class="error" id="social-username-error"></div>
-      <button onclick="saveSocialUsername()">Готово</button>
-    </div>
-  </div>
-
-  <div id="menu-overlay" onclick="closeMenu()"></div>
-  <div id="menu-panel">
-    <div class="menu-header">
-      <div class="avatar" id="menu-avatar"></div>
-      <div class="menu-header-info">
-        <h3 id="menu-username"></h3>
-        <p id="menu-login"></p>
-      </div>
-      <button class="menu-close" onclick="closeMenu()">✕</button>
-    </div>
-    <div class="menu-nav" id="menu-nav">
-      <div class="menu-nav-item active" onclick="switchMenuView('profile', this)">
-        <span class="icon">👤</span> Мой профиль
-      </div>
-      <div class="menu-nav-item" onclick="switchMenuView('favorites', this)">
-        <span class="icon">⭐</span> Избранное
-      </div>
-      <div class="menu-nav-item" onclick="switchMenuView('settings', this)">
-        <span class="icon">⚙️</span> Настройки
-      </div>
-    </div>
-    <div class="menu-content active" id="menu-view-profile">
-      <div class="menu-content-inner">
-        <div class="avatar large" id="profile-avatar"></div>
-        <div class="info-row"><span class="label">Логин</span><span class="value" id="profile-login"></span></div>
-        <div class="info-row"><span class="label">Имя пользователя</span><span class="value" id="profile-username"></span></div>
-        <div class="info-row"><span class="label">Телефон</span><span class="value" id="profile-phone"></span></div>
-        <div class="info-row"><span class="label">Статус</span><span class="value" id="profile-status"></span></div>
-        <div class="info-row"><span class="label">Вход через</span><span class="value" id="profile-provider"></span></div>
-        <div class="info-row"><span class="label">Дата регистрации</span><span class="value" id="profile-created"></span></div>
-      </div>
-    </div>
-    <div class="menu-content" id="menu-view-favorites">
-      <div class="menu-content-inner">
-        <h2>⭐ Избранные сообщения</h2>
-        <div id="favorites-list"></div>
-      </div>
-    </div>
-      <div class="menu-content" id="menu-view-settings">
-      <div class="menu-content-inner">
-        <h2>Настройки</h2>
-
-        <div class="edit-section" id="temp-section" style="display:none;">
-          <label style="color:#e74c3c; font-weight:bold;">⚠ Номер не подтверждён</label>
-          <p style="font-size:12px; color:#8899a6; margin:5px 0 10px;">Для полного доступа подтвердите номер телефона.</p>
-          <p style="font-size:12px; color:#e74c3c; margin:0 0 5px;">Лимиты SMS — если не получилось сегодня, попробуйте завтра.</p>
-          <button class="save-btn" onclick="openPhoneVerify(); closeMenu();" style="background:#e74c3c;">Подтвердить номер</button>
-        </div>
-
-        <div class="edit-section">
-          <label>Имя пользователя</label>
-          <input id="set-username" placeholder="username">
-          <div id="set-username-info" style="font-size:11px; color:#5eb5f7; margin-top:2px;"></div>
-          <div class="error-text" id="set-username-error"></div>
-          <button class="save-btn" onclick="changeUsername()">Изменить</button>
-        </div>
-
-        <div class="edit-section">
-          <label>Телефон</label>
-          <input id="set-phone-display" disabled>
-          <div id="set-phone-info" style="font-size:11px; color:#5eb5f7; margin-top:2px;"></div>
-        </div>
-      </div>
-    </div>
-    <div class="menu-footer">
-      <button onclick="logout()">Выйти из аккаунта</button>
-    </div>
-  </div>
-
-  <div id="toast"></div>
-
-  <div id="sidebar">
-    <div id="sidebar-header">
-      <div class="avatar" id="user-avatar"></div>
-      <span id="user-name"></span>
-    </div>
-    <div id="search">
-      <input placeholder="Поиск по @username или телефону..." oninput="searchUsers(this.value)">
-      <div id="search-results"></div>
-    </div>
-    <div id="chat-list">
-      <div class="list-item" onclick="openFavorites()" data-chat="favorites">
-        <div class="avatar" style="background:#f39c12;">★</div>
-        <div>Избранное</div>
-      </div>
-      <div class="list-item active" onclick="openPulseChat()">
-        <div class="avatar" style="background:#2b5278;">P</div>
-        <div>Pulse</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="main">
-    <div class="warning-banner" id="unverified-banner">⚠ Аккаунт не подтверждён. Подтвердите номер в настройках.</div>
-    <div id="chat-header">
-      <button class="back-btn" onclick="if(window.innerWidth<=768){sidebar.style.display='flex';main.style.display='none';}">←</button>
-      <div class="avatar"></div>
-      <span id="chat-title">Общий чат</span>
-    </div>
-    <div id="messages"></div>
-    <div id="input-area">
-      <input id="msg-input" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendMsg()">
-      <button onclick="sendMsg()">Отправить</button>
-    </div>
-  </div>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCyKQ5hrVFikcnL2Z_dnlHYt6G0ZgqZZoQ",
