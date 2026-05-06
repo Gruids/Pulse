@@ -128,9 +128,12 @@
 
     @media (max-width: 768px) {
       body { flex-direction: column; }
-      #sidebar { width: 100vw; position: fixed; top: 0; left: 0; height: 100vh; z-index: 200; transform: translateX(-100%); transition: transform 0.3s ease; }
-      #sidebar.active { transform: translateX(0); }
-      #main { width: 100vw; height: 100vh; }
+      #sidebar { width: 100vw; position: relative; top: 0; left: 0; height: 100vh; z-index: 100; display: flex; }
+      #main { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 101; display: none; }
+      #main.active { display: flex; }
+      .back-btn { display: none; background: none; border: none; color: #fff; cursor: pointer; font-size: 22px; padding: 5px; margin-right: 5px; }
+      .back-btn:hover { color: #5eb5f7; }
+    }
       #chat-header { padding: 12px 10px; }
       #chat-header .avatar { width: 32px; height: 32px; font-size: 13px; }
       #chat-title { font-size: 16px; }
@@ -357,7 +360,8 @@
   <div id="main">
     <div class="warning-banner" id="unverified-banner">⚠ Аккаунт не подтверждён. Подтвердите номер в настройках.</div>
     <div id="chat-header">
-      <button class="menu-btn" onclick="openMenu(); if(window.innerWidth<=768) sidebar.classList.remove('active')">☰</button>
+      <button class="back-btn" onclick="showChatList()">←</button>
+      <button class="menu-btn" onclick="openMenu()">☰</button>
       <div class="avatar"></div>
       <span id="chat-title">Общий чат</span>
     </div>
@@ -506,7 +510,6 @@
       updateMenuProfile();
       menuOverlay.classList.add('active');
       menuPanel.classList.add('active');
-      if (window.innerWidth <= 768) sidebar.classList.remove('active');
     }
 
     function closeMenu() {
@@ -518,11 +521,30 @@
       if (window.innerWidth <= 768) {
         sidebar.classList.toggle('active');
         if (sidebar.classList.contains('active')) {
+          main.classList.remove('active');
           menuOverlay.classList.add('active');
-          menuOverlay.onclick = () => { sidebar.classList.remove('active'); menuOverlay.classList.remove('active'); };
+          menuOverlay.onclick = () => {
+            sidebar.classList.remove('active');
+            main.classList.remove('active');
+            menuOverlay.classList.remove('active');
+          };
         } else {
           menuOverlay.classList.remove('active');
         }
+      }
+    }
+
+    function showChatList() {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.add('active');
+        main.classList.remove('active');
+      }
+    }
+
+    function showChat() {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('active');
+        main.classList.add('active');
       }
     }
 
@@ -774,6 +796,7 @@
       loadMessages();
       document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
       chatList.querySelector('[onclick="openGeneralChat()"]').classList.add('active');
+      showChat();
     }
 
     function openFavorites() {
@@ -784,6 +807,7 @@
       document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
       chatList.querySelector('[data-chat="favorites"]').classList.add('active');
       loadFavorites();
+      showChat();
     }
 
     let userChats = {};
@@ -831,7 +855,7 @@
       document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
       const t = document.querySelector(`#chat-list [data-chat-id="${chatId}"]`);
       if (t) t.classList.add('active');
-      if (window.innerWidth <= 768) sidebar.classList.remove('active');
+      showChat();
     }
 
     function openPrivateChat(uid, displayName) {
