@@ -697,28 +697,6 @@
       });
     }
 
-    function openPrivateChat(uid, displayName) {
-      const ids = [currentUser.uid, uid].sort();
-      const chatId = ids.join('_');
-      currentChatId = chatId;
-      currentChatType = 'private';
-      chatTitle.textContent = displayName;
-      messages.innerHTML = '';
-      loadMessages();
-      const existing = document.querySelector(`#chat-list[data-uid="${uid}"]`);
-      if (!existing) {
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.setAttribute('data-uid', uid);
-        div.innerHTML = `<div class="avatar">${displayName[0].toUpperCase()}</div><div>${displayName}</div>`;
-        div.onclick = () => openPrivateChat(uid, displayName);
-        chatList.appendChild(div);
-      }
-      document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
-      const t = document.querySelector(`#chat-list[data-uid="${uid}"]`);
-      if (t) t.classList.add('active');
-    }
-
     function openGeneralChat() {
       currentChatId = 'general';
       currentChatType = 'general';
@@ -737,6 +715,64 @@
       document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
       chatList.querySelector('[data-chat="favorites"]').classList.add('active');
       loadFavorites();
+    }
+
+    let userChats = {};
+    let chatListRef = null;
+
+    function loadUserChats() {
+      if (!currentUser) return;
+      if (chatListRef) chatListRef.off();
+      chatListRef = db.ref('userChats/' + currentUser.uid);
+      chatListRef.on('value', snapshot => {
+        userChats = snapshot.exists() ? snapshot.val() : {};
+        renderChatList();
+      });
+    }
+
+    function renderChatList() {
+      chatList.querySelectorAll('[data-uid]').forEach(el => el.remove());
+      chatList.querySelectorAll('[data-chat-id]').forEach(el => el.remove());
+      const sorted = Object.entries(userChats).sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0));
+      sorted.forEach(([chatId, chat]) => {
+        if (document.querySelector(`#chat-list [data-chat-id="${chatId}"]`)) return;
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.setAttribute('data-chat-id', chatId);
+        const initial = chat.withName ? chat.withName[0].toUpperCase() : '?';
+        div.innerHTML = `<div class="avatar">${initial}</div><div>${chat.withName || 'Пользователь'}</div>`;
+        div.onclick = () => openChat(chatId);
+        const generalItem = chatList.querySelector('[onclick="openGeneralChat()"]');
+        chatList.insertBefore(div, generalItem ? generalItem.nextSibling : null);
+      });
+      if (currentChatType === 'private' && currentChatId) {
+        const activeItem = document.querySelector(`#chat-list [data-chat-id="${currentChatId}"]`);
+        if (activeItem) activeItem.classList.add('active');
+      }
+    }
+
+    function openChat(chatId) {
+      const chat = userChats[chatId];
+      if (!chat) return;
+      currentChatId = chatId;
+      currentChatType = 'private';
+      chatTitle.textContent = chat.withName || 'Пользователь';
+      messages.innerHTML = '';
+      loadMessages();
+      document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
+      const t = document.querySelector(`#chat-list [data-chat-id="${chatId}"]`);
+      if (t) t.classList.add('active');
+    }
+
+    function openPrivateChat(uid, displayName) {
+      const ids = [currentUser.uid, uid].sort();
+      const chatId = ids.join('_');
+      if (!userChats[chatId]) {
+        const chatData = { withUid: uid, withName: displayName, updatedAt: Date.now() };
+        db.ref('userChats/' + currentUser.uid + '/' + chatId).set(chatData);
+        db.ref('userChats/' + uid + '/' + chatId).set({ withUid: currentUser.uid, withName: getDisplayName(currentUserData), updatedAt: Date.now() });
+      }
+      openChat(chatId);
     }
 
     async function loadFavorites() {
@@ -929,6 +965,7 @@
           unverifiedBanner.classList.remove('active');
         }
         
+        loadUserChats();
         loadMessages();
       } else { currentUser = null; currentUserData = null; }
     });
