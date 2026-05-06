@@ -127,10 +127,10 @@
     #toast.success { background:#27ae60; }
 
     @media (max-width: 768px) {
-      body { flex-direction: column; }
-      #sidebar { width: 100vw; position: relative; top: 0; left: 0; height: 100vh; z-index: 100; display: flex; }
-      #main { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 101; display: none; }
-      #main.active { display: flex; }
+      body { flex-direction: column !important; }
+      #sidebar { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; display: flex !important; z-index: 100; }
+      #main { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; z-index: 101; display: none !important; }
+      #main.active { display: flex !important; }
       .back-btn { display: none; background: none; border: none; color: #fff; cursor: pointer; font-size: 22px; padding: 5px; margin-right: 5px; }
       .back-btn:hover { color: #5eb5f7; }
     }
@@ -519,12 +519,12 @@
 
     function toggleSidebar() {
       if (window.innerWidth <= 768) {
-        sidebar.classList.toggle('active');
-        if (sidebar.classList.contains('active')) {
+        sidebar.classList.toggle('hidden');
+        if (!sidebar.classList.contains('hidden')) {
           main.classList.remove('active');
           menuOverlay.classList.add('active');
           menuOverlay.onclick = () => {
-            sidebar.classList.remove('active');
+            sidebar.classList.add('hidden');
             main.classList.remove('active');
             menuOverlay.classList.remove('active');
           };
@@ -536,14 +536,14 @@
 
     function showChatList() {
       if (window.innerWidth <= 768) {
-        sidebar.classList.add('active');
+        sidebar.classList.remove('hidden');
         main.classList.remove('active');
       }
     }
 
     function showChat() {
       if (window.innerWidth <= 768) {
-        sidebar.classList.remove('active');
+        sidebar.classList.add('hidden');
         main.classList.add('active');
       }
     }
