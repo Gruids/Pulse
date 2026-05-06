@@ -127,10 +127,17 @@
     #toast.success { background:#27ae60; }
 
     @media (max-width: 768px) {
-      body { flex-direction: column !important; }
-      #sidebar { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; display: flex !important; z-index: 100; }
-      #main { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; z-index: 101; display: none !important; }
+      body { flex-direction: column !important; overflow: hidden !important; }
+      #sidebar { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; display: flex !important; z-index: 100; flex-direction: column !important; }
+      #main { width: 100vw !important; height: 100vh !important; position: fixed !important; top: 0 !important; left: 0 !important; z-index: 101; display: none !important; flex-direction: column !important; }
       #main.active { display: flex !important; }
+      .back-btn { display: inline-block !important; background: none; border: none; color: #fff; cursor: pointer; font-size: 24px; padding: 2px 8px 2px 2px; margin-right: 5px; }
+      .menu-btn { display: none !important; }
+      #sidebar-header .menu-btn { display: none !important; }
+      #chat-header { padding: 10px !important; }
+      #chat-list { flex: 1 !important; overflow-y: auto !important; }
+      .list-item { padding: 14px 15px !important; min-height: 60px !important; }
+    }
       .back-btn { display: none; background: none; border: none; color: #fff; cursor: pointer; font-size: 22px; padding: 5px; margin-right: 5px; }
       .back-btn:hover { color: #5eb5f7; }
     }
@@ -337,7 +344,6 @@
 
   <div id="sidebar">
     <div id="sidebar-header">
-      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <div class="avatar" id="user-avatar"></div>
       <span id="user-name"></span>
     </div>
@@ -350,9 +356,9 @@
         <div class="avatar" style="background:#f39c12;">★</div>
         <div>Избранное</div>
       </div>
-      <div class="list-item active" onclick="openGeneralChat()">
-        <div class="avatar">O</div>
-        <div>Общий чат</div>
+      <div class="list-item active" onclick="openPulseChat()">
+        <div class="avatar" style="background:#2b5278;">P</div>
+        <div>Pulse</div>
       </div>
     </div>
   </div>
@@ -361,7 +367,6 @@
     <div class="warning-banner" id="unverified-banner">⚠ Аккаунт не подтверждён. Подтвердите номер в настройках.</div>
     <div id="chat-header">
       <button class="back-btn" onclick="showChatList()">←</button>
-      <button class="menu-btn" onclick="openMenu()">☰</button>
       <div class="avatar"></div>
       <span id="chat-title">Общий чат</span>
     </div>
@@ -796,6 +801,17 @@
       loadMessages();
       document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
       chatList.querySelector('[onclick="openGeneralChat()"]').classList.add('active');
+      showChat();
+    }
+
+    function openPulseChat() {
+      currentChatId = 'pulse';
+      currentChatType = 'pulse';
+      chatTitle.textContent = 'Pulse';
+      messages.innerHTML = '';
+      loadMessages();
+      document.querySelectorAll('#chat-list .list-item').forEach(el => el.classList.remove('active'));
+      chatList.querySelector('[onclick="openPulseChat()"]').classList.add('active');
       showChat();
     }
 
